@@ -1,6 +1,6 @@
 CFLAGS=-Wall -Werror `root-config --cflags --glibs`
 LDFLAGS=`root-config --glibs`
-CXX=g++
+CXX=clang++
 
 srcPath = src
 headerPath = inc

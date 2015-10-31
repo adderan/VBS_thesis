@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
@@ -32,4 +33,20 @@ int main(int argc, char **argv) {
     TTree *tree = (TTree*)file->Get("LHEF");
     cerr << "Tree contains " << tree->GetEntries() << "\n";
 }
+
+TTree *match_jets(TTree *truth, TTree *delphes) {
+    assert(truth->GetEntries() == delphes->GetEntries());
+    TLeaf *delphes_eta = (TLeaf*)delphes->GetLeaf("Jet.Eta");
+    TLeaf *delphes_phi = (TLeeaf*)delphes->GetLeaf("Jet.Phi");
+    TLeaf *truth_eta = (TLeaf*)truth->GetLeaf("Particle.Eta");
+    TLeaf *truth_phi = (TLeeaf*)truth->GetLeaf("Particle.Phi");
+
+    for (int i = 0; i < truth->GetEntries(); i++) {
+        truth->GetEntry(i);
+        delphes->GetEntry(i);
+
+
+
+}
+
 
