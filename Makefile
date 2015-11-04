@@ -1,24 +1,20 @@
-CFLAGS=-Wall -Werror `root-config --cflags --glibs`
-LDFLAGS=`root-config --glibs`
-CXX=clang++
 
-srcPath = src
 headerPath = inc
 binPath = bin
 libPath = lib
 
-sources = $(wildcard $(srcPath)/*.cpp)
-headers = $(wildcard $(headerPath)/*.hh)
-objects = $(sources:$(srcPath)/%.cpp=$(libPath)/%.o)
+sources = $(wildcard $(libPath)/*.cpp)
+headers = $(wildcard $(headerPath)/*.h)
 executables = ${binPath}/ClassifyJets
+
+
+CFLAGS=-Wall -Werror `root-config --cflags --glibs` -I ${headerPath}
+CXX=g++
 
 all: ${executables}
 
-${binPath}/ClassifyJets: ${srcPath}/ClassifyJets.cpp ${headers}
-	$(CXX) ${CFLAGS} -o $(binPath)/ClassifyJets ${srcPath}/ClassifyJets.cpp
+${binPath}/ClassifyJets: event-selection/ClassifyJets.cpp ${headers} ${sources}
+	$(CXX) ${CFLAGS} -o $(binPath)/ClassifyJets event-selection/ClassifyJets.cpp ${sources}
 
-#${libPath}/%.o: ${srcPath}/%.cpp ${headers}
+#${libPath}/%.o: ${libPath}/%.cpp ${headers}
 #	$(CXX) ${CFLAGS} -I ${headerPath} -c -o $@ $<
-
-
-
