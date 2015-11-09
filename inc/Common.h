@@ -9,6 +9,7 @@
 #define PROTON 2212
 #define ELECTRON 11
 #define MUON 13
+#define MAX_QUARK 9 //quarks are 1-9
 
 /*Parameters */
 

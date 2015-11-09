@@ -5,16 +5,20 @@ libPath = lib
 
 sources = $(wildcard $(libPath)/*.cpp)
 headers = $(wildcard $(headerPath)/*.h)
-executables = ${binPath}/ClassifyJets
+executables = ${binPath}/MatchJets
+submodules = delphes ExRootAnalysis
 
 
-CFLAGS=-Wall -Werror `root-config --cflags --glibs` -I ${headerPath}
+CFLAGS=-Wall -Werror `root-config --cflags --glibs` -I ${headerPath} -I delphes -I ExRootAnalysis/ExRootAnalysis -L delphes/ -L ExRootAnalysis -Wl,-rpath,${PWD}/delphes -Wl,-rpath,${PWD}/ExRootAnalysis
 CXX=g++
 
-all: ${executables}
+all: ${submodules} ${executables}
 
-${binPath}/ClassifyJets: event-selection/ClassifyJets.cpp ${headers} ${sources}
-	$(CXX) ${CFLAGS} -o $(binPath)/ClassifyJets event-selection/ClassifyJets.cpp ${sources}
+${binPath}/MatchJets: event-selection/MatchJets.cpp ${headers} ${sources}
+	$(CXX) ${CFLAGS} -o $(binPath)/MatchJets event-selection/MatchJets.cpp ${sources} -lDelphes -lExRootAnalysis
 
-#${libPath}/%.o: ${libPath}/%.cpp ${headers}
-#	$(CXX) ${CFLAGS} -I ${headerPath} -c -o $@ $<
+delphes:
+	cd delphes && make
+
+ExRootAnalysis:
+	cd ExRootAnalysis && make
