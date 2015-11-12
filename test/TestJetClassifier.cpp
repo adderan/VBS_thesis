@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
         }
     }
     JetClassifier *classifier = new JetClassifier(weightsFileName);
+    cerr << "Successfully created classifier\n";
     TFile *file = new TFile(eventsFileName);
     TTree *tree = (TTree*)file->Get("Delphes");
     ExRootTreeReader *reader = new ExRootTreeReader(tree);
@@ -43,6 +44,7 @@ int main(int argc, char **argv) {
     reader->ReadEntry(0);
     int nJets = jetBranch->GetEntriesFast();
     for (int i = 0; i < nJets; i++) {
+        cerr << "Processing entry " << i << "\n";
         Jet *jet = (Jet*)jetBranch->At(i);
         cerr << "Jet is tagging jet: " << classifier->isTaggingJet(jet);
     }

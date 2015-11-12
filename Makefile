@@ -1,15 +1,13 @@
-
-headerPath = inc
 binPath = bin
 libPath = lib
 
 sources = $(wildcard $(libPath)/*.cpp)
-headers = $(wildcard $(headerPath)/*.h)
+headers = $(wildcard $(libPath)/*.h)
 executables = ${binPath}/MatchJets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier
 submodules = delphes ExRootAnalysis
 
 
-CFLAGS=-Wall -Werror `root-config --cflags --glibs` -I ${headerPath} -I delphes -I ExRootAnalysis/ExRootAnalysis -L delphes/ -L ExRootAnalysis -Wl,-rpath,${PWD}/delphes -Wl,-rpath,${PWD}/ExRootAnalysis
+CFLAGS=-g -O0 -Wall -Werror `root-config --cflags --glibs` -I ${libPath} -I delphes -I ExRootAnalysis/ExRootAnalysis -L delphes/ -L ExRootAnalysis -Wl,-rpath,${PWD}/delphes -Wl,-rpath,${PWD}/ExRootAnalysis
 CXX=g++
 
 all: ${submodules} jetdict ${executables}
@@ -30,5 +28,4 @@ ExRootAnalysis:
 	cd ExRootAnalysis && make
 
 jetdict: ${sources}
-	cd ${headerPath} && rootcint jetdict.cpp -c TrainJet.h
-	mv ${headerPath}/jetdict.cpp ${libPath}
+	cd ${libPath} && rootcint tmp.cpp -c TrainJet.h && mv tmp.cpp jetdict.cpp

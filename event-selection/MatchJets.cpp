@@ -22,14 +22,12 @@
 
 using namespace std;
 
-void FillTrainJet(Jet *jet, TrainJet *trainJet) {
+void CopyFromJet(TrainJet *trainJet, Jet *jet) {
     trainJet->BetaStar = jet->BetaStar;
     trainJet->AbsEta = abs(jet->Eta);
+    trainJet->Energy = GetJetEnergy(jet);
     trainJet->Mass = jet->Mass;
     trainJet->PT = jet->PT;
-    TLorentzVector *v = new TLorentzVector();
-    v->SetPtEtaPhiM(jet->PT, jet->Eta, jet->Phi, jet->Mass);
-    trainJet->Energy = v->E();
 }
 
 void createTrainingSets(ExRootTreeReader *vbfnloReader, ExRootTreeReader *delphesReader, 
@@ -81,14 +79,14 @@ void createTrainingSets(ExRootTreeReader *vbfnloReader, ExRootTreeReader *delphe
                                               negativeParton->Phi) < MAX_DELTA_R)) {
                 cerr << "Matched tagging parton\n";
                 TrainJet *newJet = (TrainJet*)taggingJetsBranch->NewEntry();
-                FillTrainJet(jet, newJet);
+                CopyFromJet(newJet, jet);
                 taggingJets->Fill();
                 taggingJets->Clear();
             }
             else {
                 cerr << "Jet didn't match tagging parton\n";
                 TrainJet *newJet = (TrainJet*)backgroundJetsBranch->NewEntry();
-                FillTrainJet(jet, newJet);
+                CopyFromJet(newJet, jet);
                 backgroundJets->Fill();
                 backgroundJets->Clear();
             }

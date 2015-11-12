@@ -7,7 +7,11 @@
 
 class JetClassifier {
 public:
-    TrainJet *CurrentJet;
+    Float_t AbsEta;
+    Float_t BetaStar;
+    Float_t Mass;
+    Float_t Energy;
+    Float_t PT;
 
     TMVA::Reader *reader;
 

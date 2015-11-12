@@ -22,8 +22,7 @@
 /*----------------------- Functions ------------------------*/ 
 
 double deltaR(double eta1, double phi1, double eta2, double phi2);
-double getEnergy1(double pt, double eta, double phi, double m);
+double GetJetEnergy(Jet *jet);
 
-void CopyFromJet(TrainJet *trainJet, Jet *jet);
 
 #endif
