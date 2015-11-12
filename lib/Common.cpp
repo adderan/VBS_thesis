@@ -1,6 +1,7 @@
 #include "Common.h"
 #include "TLorentzVector.h"
 #include "ExRootClasses.h"
+#include "classes/DelphesClasses.h"
 
 
 double deltaR(double eta1, double phi1, double eta2, double phi2) {
@@ -14,3 +15,13 @@ double getEnergy1(double pt, double eta, double phi, double m) {
     return tlv->E();
 }
 
+void CopyFromJet(TrainJet *trainJet, Jet *jet) {
+
+    trainJet->BetaStar = jet->BetaStar;
+    trainJet->AbsEta = abs(jet->Eta);
+    trainJet->PT = jet->PT;
+    trainJet->Mass = jet->Mass;
+    TLorentzVector *tlv = new TLorentzVector();
+    tlv->SetPtEtaPhiM(jet->PT, jet->Eta, jet->Phi, jet->Mass);
+    trainJet->Energy = tlv->E();
+}

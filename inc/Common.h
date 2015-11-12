@@ -1,5 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
+#include "classes/DelphesClasses.h"
+#include "TrainJet.h"
 
 
 /*----------------------- Constants -------------------- */
@@ -11,6 +13,7 @@
 #define MAX_QUARK 9 //quarks are 1-9
 
 /*Parameters */
+#define JET_MVA_CUTOFF 0.9
 
 //maximum value of sqrt(eta^2 + phi^2) between two tracks that correspond to the same particle
 #define MAX_DELTA_R 0.6
@@ -21,5 +24,6 @@
 double deltaR(double eta1, double phi1, double eta2, double phi2);
 double getEnergy1(double pt, double eta, double phi, double m);
 
+void CopyFromJet(TrainJet *trainJet, Jet *jet);
 
 #endif

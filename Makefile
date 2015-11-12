@@ -5,7 +5,7 @@ libPath = lib
 
 sources = $(wildcard $(libPath)/*.cpp)
 headers = $(wildcard $(headerPath)/*.h)
-executables = ${binPath}/MatchJets ${binPath}/TrainJetClassifier
+executables = ${binPath}/MatchJets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier
 submodules = delphes ExRootAnalysis
 
 
@@ -15,10 +15,13 @@ CXX=g++
 all: ${submodules} jetdict ${executables}
 
 ${binPath}/MatchJets: event-selection/MatchJets.cpp ${headers} ${sources}
-	$(CXX) ${CFLAGS} -o $(binPath)/MatchJets event-selection/MatchJets.cpp ${sources} -lDelphes -lExRootAnalysis
+	$(CXX) ${CFLAGS} -o $(binPath)/MatchJets event-selection/MatchJets.cpp ${sources} -lDelphes -lExRootAnalysis -lTMVA
 
 ${binPath}/TrainJetClassifier: event-selection/TrainJetClassifier.cpp ${headers} ${sources}
 	${CXX} ${CFLAGS} -o ${binPath}/TrainJetClassifier event-selection/TrainJetClassifier.cpp ${sources} -lDelphes -lExRootAnalysis -lTMVA
+
+${binPath}/TestJetClassifier: test/TestJetClassifier.cpp ${headers} ${sources}
+	${CXX} ${CFLAGS} -o ${binPath}/TestJetClassifier test/TestJetClassifier.cpp ${sources} -lDelphes -lExRootAnalysis -lTMVA
 
 delphes:
 	cd delphes && make
@@ -27,6 +30,5 @@ ExRootAnalysis:
 	cd ExRootAnalysis && make
 
 jetdict: ${sources}
-	rm ${libPath}/jetdict.cpp
 	cd ${headerPath} && rootcint jetdict.cpp -c TrainJet.h
 	mv ${headerPath}/jetdict.cpp ${libPath}

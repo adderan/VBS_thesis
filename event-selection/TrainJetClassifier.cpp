@@ -1,13 +1,42 @@
 #include <getopt.h>
+#include <iostream>
 
 #include "TMVA/Types.h"
 #include "TFile.h"
 #include "TClonesArray.h"
-#include "ExRootTreeReader.h"
 #include "TMVA/Factory.h"
 
 
-void train(TTree *tagJets, TTree *backgroundJets, TFile *outputFile) {
+int main(int argc, char **argv) {
+    char *jetTrainingFileName = NULL;
+    char *outputFileName = NULL;
+    int c;
+    while(1) {
+        int option_index = 0;
+        static struct option long_options[] = {
+            {"inputJetTrainingFile", required_argument, 0, 'a'},
+            {"outputFile", required_argument, 0, 'b'}
+        };
+        c = getopt_long(argc, argv, "ab:", long_options, &option_index);
+        if (c==-1)
+            break;
+        switch(c) {
+            case 'a':
+                jetTrainingFileName = optarg;
+                break;
+            case 'b':
+                outputFileName = optarg;
+                break;
+        }
+    }
+
+    std::cerr << outputFileName;
+    TFile *trainingFile = new TFile(jetTrainingFileName);
+    TTree *tagJets = (TTree*)trainingFile->Get("Tagging");
+    TTree *backgroundJets = (TTree*)trainingFile->Get("Background");
+    TFile *outputFile = new TFile(outputFileName, "RECREATE");
+
+
     TMVA::Factory *factory = new TMVA::Factory("JetMatching", outputFile);
     factory->AddSignalTree(tagJets, 1.0);
     factory->AddBackgroundTree(backgroundJets, 1.0);
@@ -23,38 +52,8 @@ void train(TTree *tagJets, TTree *backgroundJets, TFile *outputFile) {
         "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedGrad:GradBaggingFraction=0.5:nCuts=20:NNodesMax=5" );
 
     factory->TrainAllMethods();
-    factory->TestAllMethods();
-    factory->EvaluateAllMethods();
+    outputFile->Close();
 
     delete factory;
-}
 
-int main(int argc, char **argv) {
-    char *jetTrainingFileName = NULL;
-    char *outputWeightsFileName = NULL;
-    int c;
-    while(1) {
-        int option_index = 0;
-        static struct option long_options[] = {
-            {"inputJetTrainingFile", required_argument, 0, 'a'},
-            {"outputWeightsFile", required_argument, 0, 'c'}
-        };
-        c = getopt_long(argc, argv, "ab:", long_options, &option_index);
-        if (c==-1)
-            break;
-        switch(c) {
-            case 'a':
-                jetTrainingFileName = optarg;
-                break;
-            case 'b':
-                outputWeightsFileName = optarg;
-                break;
-        }
-    }
-
-    TFile *trainingFile = new TFile(jetTrainingFileName);
-    TTree *tagJets = (TTree*)trainingFile->Get("Tagging");
-    TTree *backgroundJets = (TTree*)trainingFile->Get("Background");
-    TFile *outputFile = new TFile(outputWeightsFileName, "RECREATE");
-    train(tagJets, backgroundJets, outputFile);
 }

@@ -4,11 +4,11 @@
 
 class TrainJet: public TObject {
 public:
-    Double_t BetaStar;
-    Double_t PT;
-    Double_t AbsEta;
-    Double_t Mass;
-    Double_t Energy;
+    Float_t BetaStar;
+    Float_t PT;
+    Float_t AbsEta;
+    Float_t Mass;
+    Float_t Energy;
     //static TCompare *fgCompare; //!
     //const TCompare *GetCompare() const { return fgCompare; }
     TrainJet() {BetaStar = 0;}

@@ -1,5 +1,4 @@
 #include "TrainJet.h"
+#include "TLorentzVector.h"
 
 ClassImp(TrainJet);
-//TCompare *TrainJet::fgCompare = TComparePT<TrainJet>::Instance();
-
