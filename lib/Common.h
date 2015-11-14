@@ -1,7 +1,9 @@
 #ifndef COMMON_H
 #define COMMON_H
 #include "classes/DelphesClasses.h"
-#include "TrainJet.h"
+
+#include "Classifiers.h"
+#include "Rtypes.h"
 
 
 /*----------------------- Constants -------------------- */
@@ -23,6 +25,8 @@
 
 double deltaR(double eta1, double phi1, double eta2, double phi2);
 double GetJetEnergy(Jet *jet);
-
-
+void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1, Jet **tagJet2);
+Electron *FindElectron(TClonesArray *electrons);
+Jet *FindHadronicJet(TClonesArray *jets);
+Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2);
 #endif

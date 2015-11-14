@@ -44,9 +44,8 @@ int main(int argc, char **argv) {
     reader->ReadEntry(0);
     int nJets = jetBranch->GetEntriesFast();
     for (int i = 0; i < nJets; i++) {
-        cerr << "Processing entry " << i << "\n";
         Jet *jet = (Jet*)jetBranch->At(i);
-        cerr << "Jet is tagging jet: " << classifier->isTaggingJet(jet);
+        cerr << "Jet " << i << " is tagging jet: " << classifier->isTaggingJet(jet) << "\n";
     }
 }
     
