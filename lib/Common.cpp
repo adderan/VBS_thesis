@@ -29,10 +29,10 @@ void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1
     for(int i = 0; i < nJets; i++) {
         Jet *jet = (Jet*)jets->At(i);
         if (classifier->isTaggingJet(jet)) {
-            if (!*tagJet1) {
+            if (!(*tagJet1)) {
                 *tagJet1 = jet;
             }
-            else if (!*tagJet2) {
+            else if (!(*tagJet2)) {
                 *tagJet2 = jet;
             }
             else {

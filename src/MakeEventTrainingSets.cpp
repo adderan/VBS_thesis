@@ -1,5 +1,6 @@
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 
 
@@ -12,7 +13,7 @@
 #include "WWScatteringEvent.h"
 #include "Classifiers.h"
 
-void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExRootTreeWriter *writer) {
+void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExRootTreeWriter *writer, int nEvents) {
     ExRootTreeBranch *eventBranch = writer->NewBranch("WWScatteringEvent", WWScatteringEvent::Class());
 
 
@@ -20,17 +21,15 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
     TClonesArray *electronBranch = (TClonesArray*)reader->UseBranch("Electron");
     MissingET *missingET = (MissingET*)reader->UseBranch("MissingET");
 
-    int nEntries = reader->GetEntries();
-    for (int i = 0; i < nEntries; i++) {
+    for (int i = 0; i < nEvents; i++) {
         reader->ReadEntry(i);
-        Jet *tagJet1;
-        Jet *tagJet2;
+        Jet *tagJet1 = NULL;
+        Jet *tagJet2 = NULL;
         FindTagJetPair(classifier, jetBranch, &tagJet1, &tagJet2);
         Electron *electron = FindElectron(electronBranch);
         Jet *hadronicJet = FindHadronicJet(jetBranch);
         if (!(tagJet1 && tagJet2 && electron && hadronicJet)) {
-            //Couldn't find all the required components for a WW-scattering
-            //event.
+            std::cerr << "Couldn't find all the required components for a WW-scattering event.\n";
             continue;
         }
         WWScatteringEvent *event = (WWScatteringEvent*)eventBranch->NewEntry();
@@ -42,7 +41,9 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
         event->LeptonAbsEta = abs(electron->Eta);
         event->LeptonPT = electron->PT;
         writer->Fill();
+        writer->Clear();
     }
+    writer->Write();
 }
 
 int main(int argc, char **argv) {
@@ -51,6 +52,7 @@ int main(int argc, char **argv) {
     char *smwwFileName = NULL;
     char *weightsFileName = NULL;
     char *outputFileName = NULL;
+    int nEvents = 0;
     int c;
     while(1) {
         int option_index = 0;
@@ -59,7 +61,8 @@ int main(int argc, char **argv) {
             {"wpjetsFile", required_argument, 0, 'b'},
             {"smwwFile", required_argument, 0, 'c'},
             {"weightsFile", required_argument, 0, 'd'},
-            {"outputFile", required_argument, 0, 'e'}
+            {"outputFile", required_argument, 0, 'e'},
+            {"nEvents", required_argument, 0, 'f'}
         };
         c = getopt_long(argc, argv, "abcde:", long_options, &option_index);
         if (c==-1)
@@ -79,6 +82,9 @@ int main(int argc, char **argv) {
                 break;
             case 'e':
                 outputFileName = optarg;
+                break;
+            case 'f':
+                nEvents = atoi(optarg);
                 break;
         }
     }
@@ -101,8 +107,8 @@ int main(int argc, char **argv) {
     ExRootTreeWriter *wpjetsWriter = new ExRootTreeWriter(outputFile, "WPJets");
     ExRootTreeWriter *smwwWriter = new ExRootTreeWriter(outputFile, "SMWW");
 
-    makeTrainingEvents(jetClassifier, ttbarReader, ttbarWriter);
-    makeTrainingEvents(jetClassifier, wpjetsReader, wpjetsWriter);
-    makeTrainingEvents(jetClassifier, smwwReader, smwwWriter);
+    makeTrainingEvents(jetClassifier, ttbarReader, ttbarWriter, nEvents);
+    makeTrainingEvents(jetClassifier, wpjetsReader, wpjetsWriter, nEvents);
+    makeTrainingEvents(jetClassifier, smwwReader, smwwWriter, nEvents);
     outputFile->Close();
 }
