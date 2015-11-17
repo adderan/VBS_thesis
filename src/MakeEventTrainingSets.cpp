@@ -18,6 +18,7 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
 
 
     TClonesArray *jetBranch = (TClonesArray*)reader->UseBranch("Jet");
+    TClonesArray *muonBranch = (TClonesArray*)reader->UseBranch("Muon");
     TClonesArray *electronBranch = (TClonesArray*)reader->UseBranch("Electron");
     MissingET *missingET = (MissingET*)reader->UseBranch("MissingET");
 
@@ -26,10 +27,13 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
         Jet *tagJet1 = NULL;
         Jet *tagJet2 = NULL;
         FindTagJetPair(classifier, jetBranch, &tagJet1, &tagJet2);
-        Electron *electron = FindElectron(electronBranch);
+
+        Electron *electron;
+        Muon *muon;
+        bool found_lepton = FindLepton(electronBranch, muonBranch, &electron, &muon);
+
         Jet *hadronicJet = FindHadronicJet(jetBranch);
-        if (!(tagJet1 && tagJet2 && electron && hadronicJet)) {
-            std::cerr << "Couldn't find all the required components for a WW-scattering event.\n";
+        if (!(tagJet1 && tagJet2 && found_lepton && hadronicJet)) {
             continue;
         }
         WWScatteringEvent *event = (WWScatteringEvent*)eventBranch->NewEntry();
@@ -38,8 +42,8 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
         event->HadronicJetPT = hadronicJet->PT;
         event->MissingET = missingET->MET;
         event->Mjj = JetPairInvariantMass(tagJet1, tagJet2);
-        event->LeptonAbsEta = abs(electron->Eta);
-        event->LeptonPT = electron->PT;
+        event->LeptonAbsEta = (electron) ? abs(electron->Eta) : abs(muon->Eta);
+        event->LeptonPT = (electron) ? electron->PT : muon->PT;
         writer->Fill();
         writer->Clear();
     }
@@ -64,7 +68,7 @@ int main(int argc, char **argv) {
             {"outputFile", required_argument, 0, 'e'},
             {"nEvents", required_argument, 0, 'f'}
         };
-        c = getopt_long(argc, argv, "abcde:", long_options, &option_index);
+        c = getopt_long(argc, argv, "abcdef:", long_options, &option_index);
         if (c==-1)
             break;
         switch(c) {
