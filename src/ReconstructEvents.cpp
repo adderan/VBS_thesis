@@ -1,4 +1,5 @@
 #include <iostream>
+#include <getopt.h>
 
 #include "TTree.h"
 #include "ExRootTreeReader.h"
@@ -27,7 +28,7 @@ int main(int argc, char **argv) {
             break;
         switch(c) {
             case 'a':
-                evetnsFileName = optarg;
+                eventsFileName = optarg;
                 break;
             case 'b':
                 jetWeightsFileName = optarg; 
@@ -40,23 +41,25 @@ int main(int argc, char **argv) {
                 break;
         }
     }
+    cerr << "Using event weights: " << eventWeightsFileName << "\n";
 
-    TFile *file = new TFile(outputFileName);
+    JetClassifier *jetClassifier = new JetClassifier(jetWeightsFileName);
+    TFile *file = new TFile(eventsFileName);
     TTree *tree = (TTree*)file->Get("Delphes");
     ExRootTreeReader *reader = new ExRootTreeReader(tree);
 
     TClonesArray *jetBranch = (TClonesArray*)reader->UseBranch("Jet");
     TClonesArray *electronBranch = (TClonesArray*)reader->UseBranch("Electron");
     TClonesArray *muonBranch = (TClonesArray*)reader->UseBranch("Muon");
-    TClonesArray *ETBranch = (MissingET*)reader->UseBranch("MissingET");
-    TH1F *ww_mass_hist = new TH1F();
+    TClonesArray *ETBranch = (TClonesArray*)reader->UseBranch("MissingET");
+    TH1F *ww_mass_hist = new TH1F("WWMass", "WW Invariant Mass", 100, 0, 200000);
 
     int nEvents = reader->GetEntries();
     for (int i = 0; i < nEvents; i++) {
         reader->ReadEntry(i);
         Jet *posTagJet = NULL;
         Jet *negTagJet = NULL;
-        FindTagJets(jetBranch, &posTagJet, &negTagJet);
+        FindTagJetPair(jetClassifier, jetBranch, &posTagJet, &negTagJet);
 
         Electron *electron;
         Muon *muon;
@@ -67,7 +70,8 @@ int main(int argc, char **argv) {
         if (!(posTagJet && negTagJet && found_lepton && hadronicJet)) {
             continue;
         }
-        TLorentzVector *WWVector = ReconstructWW(electron, muon, hadronicJet);
+        MissingET *missingET = (MissingET*)ETBranch->At(0);
+        TLorentzVector *WWVector = ReconstructWW(electron, muon, hadronicJet, missingET);
         ww_mass_hist->Fill(WWVector->M());
     }
     TFile *outputFile = new TFile(outputFileName, "RECREATE");

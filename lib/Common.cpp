@@ -52,8 +52,6 @@ void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1
 bool FindLepton(TClonesArray *electrons, TClonesArray *muons, Electron **electron, Muon **muon) {
     int nElectrons = electrons->GetEntriesFast();
     int nMuons = muons->GetEntriesFast();
-    cerr << "nElectrons = " << nElectrons << "\n";
-    cerr << "nMuons = " << nMuons << "\n";
     Float_t max_pt = 0.0;
 
     for (int i = 0; i < nElectrons; i++) {
@@ -73,10 +71,10 @@ bool FindLepton(TClonesArray *electrons, TClonesArray *muons, Electron **electro
         if (candidate_muon->PT > max_pt) {
             max_pt = candidate_muon->PT;
             *muon = candidate_muon;
-            electron = NULL;
+            *electron = NULL;
         }
     }
-    if ((*electron) || (*muon)) return true;
+    if ((electron) || (muon)) return true;
     cerr << "Warning: Couldn't find the lepton.\n";
     return false;
 }
@@ -113,6 +111,9 @@ Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2) {
 TLorentzVector *ReconstructWW(Electron *electron, Muon *muon, Jet *hadronicJet, MissingET *missingET) {
     assert(!(electron && muon));
     assert(electron || muon);
+    assert(missingET->MET > 0);
+    if (electron) assert(electron->PT > 0);
+    if (muon) assert(muon->PT > 0);
     TLorentzVector *METVector = new TLorentzVector();
     METVector->SetPtEtaPhiE(missingET->MET, missingET->Eta, missingET->Phi, missingET->MET);
     TLorentzVector *leptonVector = new TLorentzVector();
@@ -130,6 +131,7 @@ TLorentzVector *ReconstructWW(Electron *electron, Muon *muon, Jet *hadronicJet, 
     TLorentzVector *hadronicWVector = new TLorentzVector();
     hadronicWVector->SetPtEtaPhiM(hadronicJet->PT, hadronicJet->Eta, hadronicJet->Phi, hadronicJet->Mass);
     TLorentzVector *WWVector = new TLorentzVector(*leptonicWVector + *hadronicWVector);
+    cerr << "WW mass: " << WWVector->M() << "\n";
     return WWVector;
 
 }
@@ -154,6 +156,7 @@ TLorentzVector *ReconstructNeutrino(TLorentzVector *METVector, TLorentzVector *l
     }
     delta = sqrt(delta);
     double pz = (lambda - delta)/2.0;
+    cerr << "Neutrino Pz: " << pz << "\n";
     double e = sqrt(METVector->Px()*METVector->Px() + METVector->Py()*METVector->Py() + pz*pz);
 
     TLorentzVector *neutrinoVector = new TLorentzVector();
