@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     char *eventsFileName = NULL;
     char *jetWeightsFileName = NULL;
     char *eventWeightsFileName = NULL;
-    char *outputFileName = NULL;
+    char *histogramFileName = NULL;
     int c;
     while(1) {
         int option_index = 0;
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
             {"events", required_argument, 0, 'a'},
             {"jetClassifierWeights", required_argument, 0, 'b'},
             {"eventClassifierWeights", required_argument, 0, 'c'},
-            {"outputHistogram", required_argument, 0, 'd'},
+            {"histogramFile", required_argument, 0, 'd'},
         };
         c = getopt_long(argc, argv, "abcd:", long_options, &option_index);
         if (c==-1)
@@ -37,12 +37,12 @@ int main(int argc, char **argv) {
                 eventWeightsFileName = optarg;
                 break;
             case 'd':
-                outputFileName = optarg;
+                histogramFileName = optarg;
                 break;
         }
     }
     cerr << "Using event weights: " << eventWeightsFileName << "\n";
-
+    
     JetClassifier *jetClassifier = new JetClassifier(jetWeightsFileName);
     TFile *file = new TFile(eventsFileName);
     TTree *tree = (TTree*)file->Get("Delphes");
@@ -52,7 +52,12 @@ int main(int argc, char **argv) {
     TClonesArray *electronBranch = (TClonesArray*)reader->UseBranch("Electron");
     TClonesArray *muonBranch = (TClonesArray*)reader->UseBranch("Muon");
     TClonesArray *ETBranch = (TClonesArray*)reader->UseBranch("MissingET");
-    TH1F *ww_mass_hist = new TH1F("WWMass", "WW Invariant Mass", 100, 0, 200000);
+
+    TFile *histogramFile = new TFile(histogramFileName, "UPDATE");
+    TH1F *ww_mass_hist = (TH1F*)histogramFile->Get(WW_MASS_HISTOGRAM_NAME);
+    if (!ww_mass_hist) {
+        ww_mass_hist = new TH1F(WW_MASS_HISTOGRAM_NAME, "WW Invariant Mass", 100, 0, 300);
+    }
 
     int nEvents = reader->GetEntries();
     for (int i = 0; i < nEvents; i++) {
@@ -72,10 +77,10 @@ int main(int argc, char **argv) {
         }
         MissingET *missingET = (MissingET*)ETBranch->At(0);
         TLorentzVector *WWVector = ReconstructWW(electron, muon, hadronicJet, missingET);
+        if (!WWVector) continue;
         ww_mass_hist->Fill(WWVector->M());
     }
-    TFile *outputFile = new TFile(outputFileName, "RECREATE");
     ww_mass_hist->Write();
     
-    outputFile->Close();
+    histogramFile->Close();
 }

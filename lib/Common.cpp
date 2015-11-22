@@ -17,6 +17,34 @@ double deltaR(double eta1, double phi1, double eta2, double phi2) {
     return sqrt((eta1 - eta2)*(eta1 - eta2) + (phi1 - phi2)*(phi1 - phi2));
 }
 
+/*
+bool FindWWComponents(TClonesArray *particles, TLorentzVector **lepton, TLorentzVector *MET, TLorentzVector *hadronicJet) {
+    double max_lepton_pt, max_hadronic_jet_pt;
+    bool found_positive_tag_jet, found_negative_tag_jet;
+    TRootLHEFParticle *lepton, *hadronicJet;
+    for (int i = 0; i < particles->GetEntriesFast(); i++) {
+        TRootLHEFParticle *particle = (TRootLHEFParticle*)particles->At(i);
+        if (particle->PID == ELECTRON || particle->PID == MUON) {
+            if (particle->PT > max_lepton_pt) {
+                lepton = particle;
+                continue;
+            }
+        }
+        if (particle->PID <= MAX_QUARK) {
+            if (particle->PT > max_lepton_pt) {
+                hadronicJet = particle;
+                max_hadroic_jet_pt = particle->PT;
+            }
+        }
+    }
+}
+*/
+
+TLorentzVector *ParticleToVector(TRootLHEFParticle *particle) {
+    TLorentzVector *tlv = new TLorentzVector();
+    tlv->SetPtEtaPhiE(particle->PT, particle->Eta, particle->Phi, particle->E);
+    return tlv;
+}
 
 double GetJetEnergy(Jet *jet) {
     TLorentzVector *tlv = new TLorentzVector();
@@ -108,31 +136,17 @@ Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2) {
 }
 
 
-TLorentzVector *ReconstructWW(Electron *electron, Muon *muon, Jet *hadronicJet, MissingET *missingET) {
-    assert(!(electron && muon));
-    assert(electron || muon);
-    assert(missingET->MET > 0);
-    if (electron) assert(electron->PT > 0);
-    if (muon) assert(muon->PT > 0);
-    TLorentzVector *METVector = new TLorentzVector();
-    METVector->SetPtEtaPhiE(missingET->MET, missingET->Eta, missingET->Phi, missingET->MET);
-    TLorentzVector *leptonVector = new TLorentzVector();
-    if (electron) {
-        leptonVector->SetPtEtaPhiM(electron->PT, electron->Eta, electron->Phi, ELECTRON_MASS);
-    }
-    else {
-        leptonVector->SetPtEtaPhiM(muon->PT, muon->Eta, muon->Phi, MUON_MASS);
-    }
-
-    TLorentzVector *neutrinoVector = ReconstructNeutrino(METVector, leptonVector);
+TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJet, TLorentzVector *missingET) {
+    TLorentzVector *neutrino = ReconstructNeutrino(missingET, lepton);
+    if (!neutrino) return NULL;
     
-    TLorentzVector *leptonicWVector = new TLorentzVector(*neutrinoVector + *leptonVector);
+    TLorentzVector *leptonicW = new TLorentzVector(*neutrino + *lepton);
 
-    TLorentzVector *hadronicWVector = new TLorentzVector();
-    hadronicWVector->SetPtEtaPhiM(hadronicJet->PT, hadronicJet->Eta, hadronicJet->Phi, hadronicJet->Mass);
-    TLorentzVector *WWVector = new TLorentzVector(*leptonicWVector + *hadronicWVector);
-    cerr << "WW mass: " << WWVector->M() << "\n";
-    return WWVector;
+    TLorentzVector *hadronicW = new TLorentzVector();
+    hadronicW->SetPtEtaPhiM(hadronicJet->Pt(), hadronicJet->Eta(), hadronicJet->Phi(), hadronicJet->M());
+    TLorentzVector *WW = new TLorentzVector(*leptonicW + *hadronicW);
+    //cerr << "WW mass: " << WWVector->M() << "\n";
+    return WW;
 
 }
 
@@ -156,11 +170,34 @@ TLorentzVector *ReconstructNeutrino(TLorentzVector *METVector, TLorentzVector *l
     }
     delta = sqrt(delta);
     double pz = (lambda - delta)/2.0;
-    cerr << "Neutrino Pz: " << pz << "\n";
+    //cerr << "Neutrino Pz: " << pz << "\n";
     double e = sqrt(METVector->Px()*METVector->Px() + METVector->Py()*METVector->Py() + pz*pz);
 
     TLorentzVector *neutrinoVector = new TLorentzVector();
     neutrinoVector->SetPxPyPzE(METVector->Px(), METVector->Py(), pz, e);
 
     return neutrinoVector;
+}
+
+TLorentzVector *ReconstructNeutrinoAlternate(TLorentzVector *MET, TLorentzVector *lepton) {
+    double pxMiss = MET->Px();
+    double pyMiss = MET->Py();
+    double ptMiss = MET->Pt();
+    const double WMass = 80.4;
+    double alpha = pow(WMass,2)+pow((pxMiss+lepton->Px()),2)+pow((pyMiss+lepton->Py()),2) -
+        pow(lepton->E(),2);
+    double beta = 0.5 * ( alpha-pow(ptMiss,2)+pow(lepton->Pz(),2) );
+    double gamma = -( beta*beta - ( pow(lepton->E(),2)*pow(ptMiss,2) ) )
+        / ( pow(lepton->E(),2)-pow(lepton->Pz(),2) );
+    double lambda = 2*beta*lepton->Pz() / (pow(lepton->E(),2)-pow(lepton->Pz(),2));
+    double delta = pow(lambda,2)-4*gamma;
+    if (delta < 0) {
+        return NULL;
+    }
+    delta = sqrt(delta);
+    double pz = (lambda-delta)/2.0;
+    double e  = sqrt(pxMiss*pxMiss+pyMiss*pyMiss+pz*pz);
+    TLorentzVector *neutrino = new TLorentzVector();
+    neutrino->SetPxPyPzE(pxMiss, pyMiss, pz, e);
+    return neutrino;
 }

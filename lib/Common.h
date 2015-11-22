@@ -4,25 +4,34 @@
 
 #include "Classifiers.h"
 #include "Rtypes.h"
+#include "ExRootClasses.h"
 
 
 /*----------------------- Values -------------------- */
 
 /****** PDG IDs *********/
-#define PROTON 2212
 #define ELECTRON 11
 #define MUON 13
 #define MAX_QUARK 9 //quarks are 1-9
+#define ELECTRON_NEUTRINO 12
+#define MUON_NEUTRINO 14
+#define GLUON 21
+#define W_BOSON 24
 
 /***** Physical Constants ******/
-#define MUON_MASS 105.658
-#define ELECTRON_MASS 0.510
-#define W_MASS 80400
+
+//All in GeV/c^2
+#define MUON_MASS 0.105658
+#define ELECTRON_MASS 0.000510
+#define W_MASS 80.4
 
 
 /******Parameters ********/
 
 #define JET_MVA_CUTOFF 0.9
+
+/******Names of things************/
+#define WW_MASS_HISTOGRAM_NAME "WWMass"
 
 
 //maximum value of sqrt(DELTA_ETA^2 + DELTA_PHI^2) for anti-kt 10 jets
@@ -44,6 +53,8 @@ void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1
 bool FindLepton(TClonesArray *electrons, TClonesArray *muons, Electron **electron, Muon **muon);
 Jet *FindHadronicJet(TClonesArray *jets);
 Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2);
-TLorentzVector *ReconstructWW(Electron *electron, Muon *muon, Jet *hadronicJet, MissingET *missingET);
+TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJet, TLorentzVector *missingET);
 TLorentzVector *ReconstructNeutrino(TLorentzVector *METVector, TLorentzVector *leptonVector);
+TLorentzVector *ParticleToVector(TRootLHEFParticle *particle);
+TLorentzVector *ReconstructNeutrinoAlternate(TLorentzVector *MET, TLorentzVector *lepton);
 #endif
