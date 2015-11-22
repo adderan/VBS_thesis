@@ -13,27 +13,39 @@
 #include "Common.h"
 
 int main(int argc, char **argv) {
-    char *eventsFileName;
+    char *eventsFileNames[50];
+    int nEventsFiles = 0;
+    char *histogramFileName;
     int c;
     while(1) {
         int option_index = 0;
         static struct option long_options[] = {
             {"events", required_argument, 0, 'a'},
+            {"histogram", required_argument, 0, 'b'}
         };
-        c = getopt_long(argc, argv, "a:", long_options, &option_index);
+        c = getopt_long(argc, argv, "ab:", long_options, &option_index);
         if (c==-1)
             break;
         switch(c) {
             case 'a':
-                eventsFileName = optarg;
+                eventsFileNames[nEventsFiles] = optarg;
+                nEventsFiles++;
+                break;
+            case 'b':
+                histogramFileName = optarg;
                 break;
         }
     }
 
-    TFile *eventsFile = new TFile(eventsFileName);
-    TTree *tree = (TTree*)eventsFile->Get("LHEF");
-    ExRootTreeReader *reader = new ExRootTreeReader(tree);
+    TChain *chain = new TChain("LHEF");
+    for (int i = 0; i < nEventsFiles; i++) {
+        chain->Add(eventsFileNames[i]);
+    }
+    ExRootTreeReader *reader = new ExRootTreeReader(chain);
     TClonesArray *particles = (TClonesArray*)reader->UseBranch("Particle");
+
+    TFile *histogramFile = new TFile(histogramFileName, "RECREATE");
+    TH1F *histogram = new TH1F("WWMass", "WW Invariant Mass", 100, 0, 800);
 
     int nEntries = reader->GetEntries();
     for (int i = 0; i < nEntries; i++) {
@@ -44,53 +56,8 @@ int main(int argc, char **argv) {
         TLorentzVector *quark2 = NULL;
         TLorentzVector *w1 = NULL;
         TLorentzVector *w2 = NULL;
-        double min_abs_eta = 10000;
-        for (int j = 0; j < particles->GetEntriesFast(); j++) {
-            TRootLHEFParticle *particle = (TRootLHEFParticle*)particles->At(j);
-
-            if (particle->Status == -1) continue;
-
-            TRootLHEFParticle *mother = NULL;
-            if(particle->Mother1 > 0) {
-                mother = (TRootLHEFParticle*)particles->At(particle->Mother1 - 1);
-            }
-
-            if (particle->PID == 24) {
-                w1 = ParticleToVector(particle);
-            }
-            else if (particle->PID == -24) {
-                w2 = ParticleToVector(particle);
-            }
-
-            else if (abs(particle->PID) < MAX_QUARK || abs(particle->PID) == GLUON) {
-                if (abs(particle->Eta) < min_abs_eta) {
-                    min_abs_eta = abs(particle->Eta);
-                    quark1 = ParticleToVector(particle);
-                }
-            }
-            else if (mother && abs(mother->PID) == W_BOSON) {
-                if (abs(particle->PID) == ELECTRON_NEUTRINO || abs(particle->PID) == MUON_NEUTRINO) {
-                    neutrino = ParticleToVector(particle);
-                }
-                if(abs(particle->PID) == ELECTRON || abs(particle->PT) == MUON) {
-                    lepton = ParticleToVector(particle);
-                }
-            }
-
-        }
-        //Find second most central jet
-        double second_min_abs_eta = 10000;
-        for (int k = 0; k < particles->GetEntriesFast(); k++) {
-            TRootLHEFParticle *particle = (TRootLHEFParticle*)particles->At(k);
-            if (particle->Status == -1) continue;
-            if (abs(particle->PID) < MAX_QUARK || abs(particle->PID) == GLUON) {
-                if (abs(particle->Eta) < second_min_abs_eta && abs(particle->Eta) != min_abs_eta) {
-                    second_min_abs_eta = abs(particle->Eta);
-                    quark2 = ParticleToVector(particle);
-                }
-            }
-        }
-
+        MatchPartonWWScatteringEvent(particles, &lepton, &neutrino, &quark1, &quark2, &w1, &w2);
+        
         if (!(lepton && neutrino && quark1 && quark2 && w1 && w2)) {
             continue;
         }
@@ -105,8 +72,11 @@ int main(int argc, char **argv) {
         if (!reconstructedNeutrino) continue;
         std::cerr << "Truth n pz: " << neutrino->Pz() << ", Rec. n pz: " 
             << reconstructedNeutrino->Pz() << " Truth ww: " << trueWW->M() << " rec. WW: " << reconstructedWW->M() << "\n";
+        histogram->Fill(reconstructedWW->M());
 
     }
+    histogram->Write();
+    histogramFile->Close();
 
 }
 

@@ -66,19 +66,20 @@ int main(int argc, char **argv) {
         Jet *negTagJet = NULL;
         FindTagJetPair(jetClassifier, jetBranch, &posTagJet, &negTagJet);
 
-        Electron *electron;
-        Muon *muon;
-        bool found_lepton = FindLepton(electronBranch, muonBranch, &electron, &muon);
+        TLorentzVector *lepton = new TLorentzVector();
+        bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
 
-        Jet *hadronicJet = FindHadronicJet(jetBranch);
+        TLorentzVector *hadronicJet = FindHadronicJet(jetBranch);
 
         if (!(posTagJet && negTagJet && found_lepton && hadronicJet)) {
             continue;
         }
-        MissingET *missingET = (MissingET*)ETBranch->At(0);
-        TLorentzVector *WWVector = ReconstructWW(electron, muon, hadronicJet, missingET);
-        if (!WWVector) continue;
-        ww_mass_hist->Fill(WWVector->M());
+        MissingET *METParticle = (MissingET*)ETBranch->At(0);
+        TLorentzVector *MET = new TLorentzVector();
+        MET->SetPtEtaPhiE(METParticle->MET, METParticle->Eta, METParticle->Phi, METParticle->MET);
+        TLorentzVector *WW = ReconstructWW(lepton, hadronicJet, MET);
+        if (!WW) continue;
+        ww_mass_hist->Fill(WW->M());
     }
     ww_mass_hist->Write();
     

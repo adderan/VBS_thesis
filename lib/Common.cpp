@@ -77,39 +77,38 @@ void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1
 }
 
 //Find the highest PT electron or muon in an event
-bool FindLepton(TClonesArray *electrons, TClonesArray *muons, Electron **electron, Muon **muon) {
+bool FindLepton(TClonesArray *electrons, TClonesArray *muons, TLorentzVector *lepton) {
     int nElectrons = electrons->GetEntriesFast();
     int nMuons = muons->GetEntriesFast();
     Float_t max_pt = 0.0;
 
+    bool found_lepton = false;
     for (int i = 0; i < nElectrons; i++) {
-        Electron *candidate_electron = (Electron*)electrons->At(i);
-        if(abs(candidate_electron->Eta) > LEPTON_ETA_CUTOFF) continue;
+        Electron *electron = (Electron*)electrons->At(i);
+        if(abs(electron->Eta) > LEPTON_ETA_CUTOFF) continue;
 
-        if (candidate_electron->PT > max_pt) {
-            max_pt = candidate_electron->PT;
-            *electron = candidate_electron;
-            *muon = NULL;
+        if (electron->PT > max_pt) {
+            max_pt = electron->PT;
+            lepton->SetPtEtaPhiM(electron->PT, electron->Eta, electron->Phi, ELECTRON_MASS);
+            found_lepton = true;
         }
     }
     for (int i = 0; i < nMuons; i++) {
-        Muon *candidate_muon = (Muon*)muons->At(i);
-        if (abs(candidate_muon->Eta) > LEPTON_ETA_CUTOFF) continue;
+        Muon *muon = (Muon*)muons->At(i);
+        if (abs(muon->Eta) > LEPTON_ETA_CUTOFF) continue;
 
-        if (candidate_muon->PT > max_pt) {
-            max_pt = candidate_muon->PT;
-            *muon = candidate_muon;
-            *electron = NULL;
+        if (muon->PT > max_pt) {
+            max_pt = muon->PT;
+            lepton->SetPtEtaPhiM(muon->PT, muon->Eta, muon->Phi, MUON_MASS);
+            found_lepton = true;
         }
     }
-    if ((electron) || (muon)) return true;
-    cerr << "Warning: Couldn't find the lepton.\n";
-    return false;
+    return found_lepton;
 }
 
 //Find the highest PT anti-kt 10 jet in the
 //event
-Jet *FindHadronicJet(TClonesArray *jets) {
+TLorentzVector *FindHadronicJet(TClonesArray *jets) {
     Float_t max_pt = 0;
     Jet *maxPTJet = NULL;
 
@@ -122,8 +121,10 @@ Jet *FindHadronicJet(TClonesArray *jets) {
             maxPTJet = jet;
         }
     }
-    if (!maxPTJet) cerr << "Warning: Couldn't find hadronic jet.\n";
-    return maxPTJet;
+    if (!maxPTJet) return NULL;
+    TLorentzVector *jetVector = new TLorentzVector();
+    jetVector->SetPtEtaPhiM(maxPTJet->PT, maxPTJet->Eta, maxPTJet->Phi, maxPTJet->Mass);
+    return jetVector;
 }
 
 Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2) {
@@ -135,6 +136,55 @@ Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2) {
     return tlv3.M();
 }
 
+void MatchPartonWWScatteringEvent(TClonesArray *particles, TLorentzVector **lepton, TLorentzVector **neutrino,
+        TLorentzVector **quark1, TLorentzVector **quark2, TLorentzVector **w1, TLorentzVector **w2) {
+    double min_abs_eta = 10000;
+    for (int j = 0; j < particles->GetEntriesFast(); j++) {
+        TRootLHEFParticle *particle = (TRootLHEFParticle*)particles->At(j);
+
+        if (particle->Status == -1) continue;
+
+        TRootLHEFParticle *mother = NULL;
+        if(particle->Mother1 > 0) {
+            mother = (TRootLHEFParticle*)particles->At(particle->Mother1 - 1);
+        }
+
+        if (particle->PID == 24) {
+            *w1 = ParticleToVector(particle);
+        }
+        else if (particle->PID == -24) {
+            *w2 = ParticleToVector(particle);
+        }
+
+        else if (abs(particle->PID) < MAX_QUARK || abs(particle->PID) == GLUON) {
+            if (abs(particle->Eta) < min_abs_eta) {
+                min_abs_eta = abs(particle->Eta);
+                *quark1 = ParticleToVector(particle);
+            }
+        }
+        else if (mother && abs(mother->PID) == W_BOSON) {
+            if (abs(particle->PID) == ELECTRON_NEUTRINO || abs(particle->PID) == MUON_NEUTRINO) {
+                *neutrino = ParticleToVector(particle);
+            }
+            if(abs(particle->PID) == ELECTRON || abs(particle->PT) == MUON) {
+                *lepton = ParticleToVector(particle);
+            }
+        }
+
+    }
+    //Find second most central jet
+    double second_min_abs_eta = 10000;
+    for (int k = 0; k < particles->GetEntriesFast(); k++) {
+        TRootLHEFParticle *particle = (TRootLHEFParticle*)particles->At(k);
+        if (particle->Status == -1) continue;
+        if (abs(particle->PID) < MAX_QUARK || abs(particle->PID) == GLUON) {
+            if (abs(particle->Eta) < second_min_abs_eta && abs(particle->Eta) != min_abs_eta) {
+                second_min_abs_eta = abs(particle->Eta);
+                *quark2 = ParticleToVector(particle);
+            }
+        }
+    }
+}
 
 TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJet, TLorentzVector *missingET) {
     TLorentzVector *neutrino = ReconstructNeutrino(missingET, lepton);

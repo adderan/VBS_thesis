@@ -50,11 +50,13 @@
 double deltaR(double eta1, double phi1, double eta2, double phi2);
 double GetJetEnergy(Jet *jet);
 void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1, Jet **tagJet2);
-bool FindLepton(TClonesArray *electrons, TClonesArray *muons, Electron **electron, Muon **muon);
-Jet *FindHadronicJet(TClonesArray *jets);
+bool FindLepton(TClonesArray *electrons, TClonesArray *muons, TLorentzVector *lepton);
+TLorentzVector *FindHadronicJet(TClonesArray *jets);
 Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2);
 TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJet, TLorentzVector *missingET);
 TLorentzVector *ReconstructNeutrino(TLorentzVector *METVector, TLorentzVector *leptonVector);
 TLorentzVector *ParticleToVector(TRootLHEFParticle *particle);
 TLorentzVector *ReconstructNeutrinoAlternate(TLorentzVector *MET, TLorentzVector *lepton);
+void MatchPartonWWScatteringEvent(TClonesArray *particles, TLorentzVector **lepton, TLorentzVector **neutrino,
+        TLorentzVector **quark1, TLorentzVector **quark2, TLorentzVector **w1, TLorentzVector **w2);
 #endif

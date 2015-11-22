@@ -28,22 +28,21 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
         Jet *tagJet2 = NULL;
         FindTagJetPair(classifier, jetBranch, &tagJet1, &tagJet2);
 
-        Electron *electron;
-        Muon *muon;
-        bool found_lepton = FindLepton(electronBranch, muonBranch, &electron, &muon);
+        TLorentzVector *lepton = new TLorentzVector();
+        bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
 
-        Jet *hadronicJet = FindHadronicJet(jetBranch);
+        TLorentzVector *hadronicJet = FindHadronicJet(jetBranch);
         if (!(tagJet1 && tagJet2 && found_lepton && hadronicJet)) {
             continue;
         }
         WWScatteringEvent *event = (WWScatteringEvent*)eventBranch->NewEntry();
-        event->HadronicJetAbsEta = abs(hadronicJet->Eta);
-        event->HadronicJetMass = hadronicJet->Mass;
-        event->HadronicJetPT = hadronicJet->PT;
+        event->HadronicJetAbsEta = abs(hadronicJet->Eta());
+        event->HadronicJetMass = hadronicJet->M();
+        event->HadronicJetPT = hadronicJet->Pt();
         event->MissingET = missingET->MET;
         event->Mjj = JetPairInvariantMass(tagJet1, tagJet2);
-        event->LeptonAbsEta = (electron) ? abs(electron->Eta) : abs(muon->Eta);
-        event->LeptonPT = (electron) ? electron->PT : muon->PT;
+        event->LeptonAbsEta = abs(lepton->Eta());
+        event->LeptonPT = lepton->Pt();
         writer->Fill();
         writer->Clear();
     }
