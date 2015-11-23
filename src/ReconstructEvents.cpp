@@ -6,14 +6,16 @@
 #include "Common.h"
 #include "TClonesArray.h"
 #include "TH1F.h"
+#include "TChain.h"
 
 using namespace std;
 
 int main(int argc, char **argv) {
-    char *eventsFileName = NULL;
+    char *eventsFileNames[50];
     char *jetWeightsFileName = NULL;
     char *eventWeightsFileName = NULL;
     char *histogramFileName = NULL;
+    int nEventsFiles = 0;
     int c;
     while(1) {
         int option_index = 0;
@@ -28,7 +30,8 @@ int main(int argc, char **argv) {
             break;
         switch(c) {
             case 'a':
-                eventsFileName = optarg;
+                eventsFileNames[nEventsFiles] = optarg;
+                nEventsFiles++;
                 break;
             case 'b':
                 jetWeightsFileName = optarg; 
@@ -41,37 +44,38 @@ int main(int argc, char **argv) {
                 break;
         }
     }
-    cerr << "Using event weights: " << eventWeightsFileName << "\n";
+    std::cerr << "Event weights filename: " << eventWeightsFileName << "\n";
     
     JetClassifier *jetClassifier = new JetClassifier(jetWeightsFileName);
-    TFile *file = new TFile(eventsFileName);
-    TTree *tree = (TTree*)file->Get("Delphes");
-    ExRootTreeReader *reader = new ExRootTreeReader(tree);
+    TChain *chain = new TChain("Delphes");
+    for (int i = 0; i < nEventsFiles; i++) {
+        chain->Add(eventsFileNames[i]);
+    }
+    ExRootTreeReader *reader = new ExRootTreeReader(chain);
 
     TClonesArray *jetBranch = (TClonesArray*)reader->UseBranch("Jet");
     TClonesArray *electronBranch = (TClonesArray*)reader->UseBranch("Electron");
     TClonesArray *muonBranch = (TClonesArray*)reader->UseBranch("Muon");
     TClonesArray *ETBranch = (TClonesArray*)reader->UseBranch("MissingET");
 
-    TFile *histogramFile = new TFile(histogramFileName, "UPDATE");
-    TH1F *ww_mass_hist = (TH1F*)histogramFile->Get(WW_MASS_HISTOGRAM_NAME);
-    if (!ww_mass_hist) {
-        ww_mass_hist = new TH1F(WW_MASS_HISTOGRAM_NAME, "WW Invariant Mass", 100, 0, 300);
-    }
+    TFile *histogramFile = new TFile(histogramFileName, "RECREATE");
+    TH1F *ww_mass_hist = new TH1F(WW_MASS_HISTOGRAM_NAME, "WW Invariant Mass", 100, 0, 2500);
 
     int nEvents = reader->GetEntries();
     for (int i = 0; i < nEvents; i++) {
         reader->ReadEntry(i);
-        Jet *posTagJet = NULL;
-        Jet *negTagJet = NULL;
-        FindTagJetPair(jetClassifier, jetBranch, &posTagJet, &negTagJet);
+        TLorentzVector *positiveJet = new TLorentzVector();
+        TLorentzVector *negativeJet = new TLorentzVector();
+        bool found_tag_jets = FindTagJetPair(jetClassifier, jetBranch, positiveJet, negativeJet);
 
         TLorentzVector *lepton = new TLorentzVector();
         bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
 
         TLorentzVector *hadronicJet = FindHadronicJet(jetBranch);
 
-        if (!(posTagJet && negTagJet && found_lepton && hadronicJet)) {
+        if (!(found_tag_jets && found_lepton && hadronicJet)) {
+            std::cerr << "Event didn't pass. found_tag_jets: " << found_tag_jets  << " found_lepton: " << found_lepton 
+                << " hadronicJet: " << hadronicJet << "\n";
             continue;
         }
         MissingET *METParticle = (MissingET*)ETBranch->At(0);

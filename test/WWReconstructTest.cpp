@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
         //apprximate missing ET
         TLorentzVector *met = new TLorentzVector();
         met->SetPtEtaPhiE(neutrino->Pt(), neutrino->Eta(), neutrino->Phi(), neutrino->Pt());
-        TLorentzVector *reconstructedNeutrino = ReconstructNeutrinoAlternate(met, lepton);
+        TLorentzVector *reconstructedNeutrino = ReconstructNeutrino(met, lepton);
         TLorentzVector *reconstructedWW = ReconstructWW(lepton, quark1, met);
 
         TLorentzVector *trueWW = new TLorentzVector(*w1 + *w2);

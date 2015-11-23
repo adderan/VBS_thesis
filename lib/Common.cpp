@@ -17,29 +17,6 @@ double deltaR(double eta1, double phi1, double eta2, double phi2) {
     return sqrt((eta1 - eta2)*(eta1 - eta2) + (phi1 - phi2)*(phi1 - phi2));
 }
 
-/*
-bool FindWWComponents(TClonesArray *particles, TLorentzVector **lepton, TLorentzVector *MET, TLorentzVector *hadronicJet) {
-    double max_lepton_pt, max_hadronic_jet_pt;
-    bool found_positive_tag_jet, found_negative_tag_jet;
-    TRootLHEFParticle *lepton, *hadronicJet;
-    for (int i = 0; i < particles->GetEntriesFast(); i++) {
-        TRootLHEFParticle *particle = (TRootLHEFParticle*)particles->At(i);
-        if (particle->PID == ELECTRON || particle->PID == MUON) {
-            if (particle->PT > max_lepton_pt) {
-                lepton = particle;
-                continue;
-            }
-        }
-        if (particle->PID <= MAX_QUARK) {
-            if (particle->PT > max_lepton_pt) {
-                hadronicJet = particle;
-                max_hadroic_jet_pt = particle->PT;
-            }
-        }
-    }
-}
-*/
-
 TLorentzVector *ParticleToVector(TRootLHEFParticle *particle) {
     TLorentzVector *tlv = new TLorentzVector();
     tlv->SetPtEtaPhiE(particle->PT, particle->Eta, particle->Phi, particle->E);
@@ -54,26 +31,26 @@ double GetJetEnergy(Jet *jet) {
 
 //Finds the two tagging high-eta tagging jets on opposite eta hemispheres, 
 //using the provided tagging jet classifier
-void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1, Jet **tagJet2) {
+bool FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, 
+        TLorentzVector *positiveJet, TLorentzVector *negativeJet) {
     int nJets = jets->GetEntriesFast();
+    bool found_positive_jet = false;
+    bool found_negative_jet = false;
     for(int i = 0; i < nJets; i++) {
+        if (found_positive_jet && found_negative_jet) return true;
         Jet *jet = (Jet*)jets->At(i);
         if (classifier->isTaggingJet(jet)) {
-            if (!(*tagJet1)) {
-                *tagJet1 = jet;
+            if (!found_positive_jet && jet->Eta > 0) {
+                positiveJet->SetPtEtaPhiM(jet->PT, jet->Eta, jet->Phi, jet->Mass);
+                found_positive_jet = true;
             }
-            else if (!(*tagJet2)) {
-                *tagJet2 = jet;
-            }
-            else {
-                cerr << "Warning: Too many tag jets in this event.\n";
-                *tagJet1 = NULL;
-                *tagJet2 = NULL;
-                return;
+            else if (!found_negative_jet && jet->Eta < 0) {
+                negativeJet->SetPtEtaPhiM(jet->PT, jet->Eta, jet->Phi, jet->Mass);
+                found_negative_jet = true;
             }
         }
     }
-    if(!*tagJet1 && !*tagJet2) cerr << "Warning. Couldn't find the tag jets.\n";
+    return (found_positive_jet && found_negative_jet);
 }
 
 //Find the highest PT electron or muon in an event
@@ -86,6 +63,7 @@ bool FindLepton(TClonesArray *electrons, TClonesArray *muons, TLorentzVector *le
     for (int i = 0; i < nElectrons; i++) {
         Electron *electron = (Electron*)electrons->At(i);
         if(abs(electron->Eta) > LEPTON_ETA_CUTOFF) continue;
+        if (electron->PT < LEPTON_PT_CUTOFF) continue;
 
         if (electron->PT > max_pt) {
             max_pt = electron->PT;
@@ -95,7 +73,8 @@ bool FindLepton(TClonesArray *electrons, TClonesArray *muons, TLorentzVector *le
     }
     for (int i = 0; i < nMuons; i++) {
         Muon *muon = (Muon*)muons->At(i);
-        if (abs(muon->Eta) > LEPTON_ETA_CUTOFF) continue;
+        if (abs(muon->Eta) < LEPTON_ETA_CUTOFF) continue;
+        if (muon->PT < LEPTON_PT_CUTOFF) continue;
 
         if (muon->PT > max_pt) {
             max_pt = muon->PT;
@@ -116,12 +95,17 @@ TLorentzVector *FindHadronicJet(TClonesArray *jets) {
     for (int i = 0; i < nJets; i++) {
         Jet *jet = (Jet*)jets->At(i);
         Double_t dR = sqrt(jet->DeltaEta * jet->DeltaEta + jet->DeltaPhi * jet->DeltaPhi);
-        if (dR > DELTA_ETA_PHI_CUTOFF) continue;
+        if (dR > DELTA_ETA_PHI_CUTOFF) {
+            continue;
+        }
         if (jet->PT > max_pt) {
+            max_pt = jet->PT;
             maxPTJet = jet;
         }
     }
-    if (!maxPTJet) return NULL;
+    if (!maxPTJet) {
+        return NULL;
+    }
     TLorentzVector *jetVector = new TLorentzVector();
     jetVector->SetPtEtaPhiM(maxPTJet->PT, maxPTJet->Eta, maxPTJet->Phi, maxPTJet->Mass);
     return jetVector;
@@ -136,6 +120,8 @@ Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2) {
     return tlv3.M();
 }
 
+/* Find the components of a WW-scattering event at the parton level,
+ */
 void MatchPartonWWScatteringEvent(TClonesArray *particles, TLorentzVector **lepton, TLorentzVector **neutrino,
         TLorentzVector **quark1, TLorentzVector **quark2, TLorentzVector **w1, TLorentzVector **w2) {
     double min_abs_eta = 10000;
@@ -202,34 +188,7 @@ TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJe
 
 // Calculate the transverse momentum of the neutrino in a WW-scattering event. This is based on code from
 // from http://acode-browser2.usatlas.bnl.gov/lxr-rel17/source/atlas/PhysicsAnalysis/AnalysisCommon/SpecialUtils/SpecialUtils/NeutrinoUtils.icc
-TLorentzVector *ReconstructNeutrino(TLorentzVector *METVector, TLorentzVector *leptonVector) {
-    double ptMiss = METVector->Pt();
-    double alpha = pow(W_MASS, 2) + pow((METVector->Px() + leptonVector->Px()), 2) 
-        + pow((METVector->Py() + leptonVector->Py()), 2) - pow(leptonVector->E(), 2);
-
-    double beta = 0.5 * (alpha - pow(ptMiss, 2) + pow(leptonVector->Pz(), 2) );
-    double gamma = -1*(beta*beta - ( pow(leptonVector->E(), 2) * pow(ptMiss, 2) ) ) /
-        ( pow(leptonVector->E(), 2) - pow(leptonVector->Pz(), 2) );
-
-    double lambda = 2 * beta * leptonVector->Pz() / ( pow(leptonVector->E(), 2) - pow(leptonVector->Pz(), 2) );
-    double delta = pow(lambda, 2) - 4*gamma;
-
-    if (delta < 0) {
-        cerr << "Warning: Negative discriminant when reconstructing neutrino.\n";
-        return NULL;
-    }
-    delta = sqrt(delta);
-    double pz = (lambda - delta)/2.0;
-    //cerr << "Neutrino Pz: " << pz << "\n";
-    double e = sqrt(METVector->Px()*METVector->Px() + METVector->Py()*METVector->Py() + pz*pz);
-
-    TLorentzVector *neutrinoVector = new TLorentzVector();
-    neutrinoVector->SetPxPyPzE(METVector->Px(), METVector->Py(), pz, e);
-
-    return neutrinoVector;
-}
-
-TLorentzVector *ReconstructNeutrinoAlternate(TLorentzVector *MET, TLorentzVector *lepton) {
+TLorentzVector *ReconstructNeutrino(TLorentzVector *MET, TLorentzVector *lepton) {
     double pxMiss = MET->Px();
     double pyMiss = MET->Py();
     double ptMiss = MET->Pt();

@@ -4,7 +4,7 @@ tmpPath = ${PWD}/tmp
 
 libsources = $(wildcard $(libPath)/*.cpp)
 headers = $(wildcard $(libPath)/*.h)
-executables = ${binPath}/MatchJets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier ${binPath}/MakeEventTrainingSets ${binPath}/ReconstructEvents ${binPath}/WWReconstructTest
+executables = ${binPath}/MakeJetTrainingSets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier ${binPath}/MakeEventTrainingSets ${binPath}/ReconstructEvents ${binPath}/WWReconstructTest
 
 
 CFLAGS=-g -O0 -Wall -Werror `root-config --cflags --glibs` -I ${libPath} -I delphes -I ExRootAnalysis/ExRootAnalysis -L delphes/ -L ExRootAnalysis -Wl,-rpath,${PWD}/delphes -Wl,-rpath,${PWD}/ExRootAnalysis
@@ -14,8 +14,8 @@ dict = ${tmpPath}/wwscatteringdict.cpp
 
 all: ${executables}
 
-${binPath}/MatchJets: src/MatchJets.cpp ${headers} ${libsources} ${external} ${dict}
-	$(CXX) ${CFLAGS} -o $(binPath)/MatchJets src/MatchJets.cpp ${libsources} ${dict} -lDelphes -lExRootAnalysis -lTMVA
+${binPath}/MakeJetTrainingSets: src/MakeJetTrainingSets.cpp ${headers} ${libsources} ${external} ${dict}
+	$(CXX) ${CFLAGS} -o $(binPath)/MakeJetTrainingSets src/MakeJetTrainingSets.cpp ${libsources} ${dict} -lDelphes -lExRootAnalysis -lTMVA
 
 ${binPath}/TrainJetClassifier: src/TrainJetClassifier.cpp ${headers} ${libsources} ${external} ${dict}
 	${CXX} ${CFLAGS} -o ${binPath}/TrainJetClassifier src/TrainJetClassifier.cpp ${libsources} ${dict} -lDelphes -lExRootAnalysis -lTMVA

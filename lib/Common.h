@@ -28,7 +28,7 @@
 
 /******Parameters ********/
 
-#define JET_MVA_CUTOFF 0.9
+#define JET_MVA_CUTOFF 0.5
 
 /******Names of things************/
 #define WW_MASS_HISTOGRAM_NAME "WWMass"
@@ -43,20 +43,22 @@
 //Maximum Eta of lepton in WW scattering event
 #define LEPTON_ETA_CUTOFF 2.4
 
+#define LEPTON_PT_CUTOFF 25
+
 
 
 /*----------------------- Functions ------------------------*/ 
 
 double deltaR(double eta1, double phi1, double eta2, double phi2);
 double GetJetEnergy(Jet *jet);
-void FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, Jet **tagJet1, Jet **tagJet2);
+bool FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, 
+        TLorentzVector *positiveJet, TLorentzVector *negativeJet);
 bool FindLepton(TClonesArray *electrons, TClonesArray *muons, TLorentzVector *lepton);
 TLorentzVector *FindHadronicJet(TClonesArray *jets);
 Float_t JetPairInvariantMass(Jet *jet1, Jet *jet2);
 TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJet, TLorentzVector *missingET);
-TLorentzVector *ReconstructNeutrino(TLorentzVector *METVector, TLorentzVector *leptonVector);
+TLorentzVector *ReconstructNeutrino(TLorentzVector *MET, TLorentzVector *lepton);
 TLorentzVector *ParticleToVector(TRootLHEFParticle *particle);
-TLorentzVector *ReconstructNeutrinoAlternate(TLorentzVector *MET, TLorentzVector *lepton);
 void MatchPartonWWScatteringEvent(TClonesArray *particles, TLorentzVector **lepton, TLorentzVector **neutrino,
         TLorentzVector **quark1, TLorentzVector **quark2, TLorentzVector **w1, TLorentzVector **w2);
 #endif

@@ -13,6 +13,8 @@
 #include "WWScatteringEvent.h"
 #include "Classifiers.h"
 
+using namespace std;
+
 void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExRootTreeWriter *writer, int nEvents) {
     ExRootTreeBranch *eventBranch = writer->NewBranch("WWScatteringEvent", WWScatteringEvent::Class());
 
@@ -22,25 +24,37 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
     TClonesArray *electronBranch = (TClonesArray*)reader->UseBranch("Electron");
     MissingET *missingET = (MissingET*)reader->UseBranch("MissingET");
 
-    for (int i = 0; i < nEvents; i++) {
+    int i = 0;
+    int nFilled = 0;
+    int nAvailableEvents = reader->GetEntries();
+    while (nFilled < nEvents) {
+        if (i > nAvailableEvents) {
+            std::cerr << "Files didn't contain enough entries.\n";
+            break;
+        }
+
         reader->ReadEntry(i);
-        Jet *tagJet1 = NULL;
-        Jet *tagJet2 = NULL;
-        FindTagJetPair(classifier, jetBranch, &tagJet1, &tagJet2);
+        i++;
+        TLorentzVector *positiveJet = new TLorentzVector();
+        TLorentzVector *negativeJet = new TLorentzVector();
+        bool found_tag_jets = FindTagJetPair(classifier, jetBranch, positiveJet, negativeJet);
 
         TLorentzVector *lepton = new TLorentzVector();
         bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
 
         TLorentzVector *hadronicJet = FindHadronicJet(jetBranch);
-        if (!(tagJet1 && tagJet2 && found_lepton && hadronicJet)) {
+        if (!(found_tag_jets && found_lepton && hadronicJet)) {
+            cerr << "Event didn't pass.\n";
             continue;
         }
+        nFilled++;
+        TLorentzVector *tagJetPair = new TLorentzVector(*positiveJet + *negativeJet);
         WWScatteringEvent *event = (WWScatteringEvent*)eventBranch->NewEntry();
         event->HadronicJetAbsEta = abs(hadronicJet->Eta());
         event->HadronicJetMass = hadronicJet->M();
         event->HadronicJetPT = hadronicJet->Pt();
         event->MissingET = missingET->MET;
-        event->Mjj = JetPairInvariantMass(tagJet1, tagJet2);
+        event->Mjj = tagJetPair->M();
         event->LeptonAbsEta = abs(lepton->Eta());
         event->LeptonPT = lepton->Pt();
         writer->Fill();
@@ -52,10 +66,13 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
 int main(int argc, char **argv) {
     char *ttbarFileName = NULL;
     char *wpjetsFileName = NULL;
-    char *smwwFileName = NULL;
-    char *weightsFileName = NULL;
+    char *smwwFileNames[50];
+    char *jetWeightsFileName = NULL;
     char *outputFileName = NULL;
-    int nEvents = 0;
+    int nSMFiles = 0;
+    int nTTBarEvents = 0;
+    int nSMEvents = 0;
+    int nWPJetsEvents = 0;
     int c;
     while(1) {
         int option_index = 0;
@@ -63,11 +80,13 @@ int main(int argc, char **argv) {
             {"ttbarFile", required_argument, 0, 'a'},
             {"wpjetsFile", required_argument, 0, 'b'},
             {"smwwFile", required_argument, 0, 'c'},
-            {"weightsFile", required_argument, 0, 'd'},
-            {"outputFile", required_argument, 0, 'e'},
-            {"nEvents", required_argument, 0, 'f'}
+            {"nSMEvents", required_argument, 0, 'd'},
+            {"nTTBarEvents", required_argument, 0, 'e'},
+            {"nWPJetsEvents", required_argument, 0, 'f'},
+            {"jetWeights", required_argument, 0, 'g'},
+            {"outputFile", required_argument, 0, 'h'}
         };
-        c = getopt_long(argc, argv, "abcdef:", long_options, &option_index);
+        c = getopt_long(argc, argv, "abcdefgh:", long_options, &option_index);
         if (c==-1)
             break;
         switch(c) {
@@ -78,40 +97,50 @@ int main(int argc, char **argv) {
                 wpjetsFileName = optarg; 
                 break;
             case 'c':
-                smwwFileName = optarg;
+                smwwFileNames[nSMFiles] = optarg;
+                nSMFiles++;
                 break;
             case 'd':
-                weightsFileName = optarg;
+                nSMEvents = atoi(optarg);
                 break;
             case 'e':
-                outputFileName = optarg;
+                nTTBarEvents = atoi(optarg);
                 break;
             case 'f':
-                nEvents = atoi(optarg);
+                nWPJetsEvents = atoi(optarg);
+                break;
+            case 'g':
+                jetWeightsFileName = optarg;
+                break;
+            case 'h':
+                outputFileName = optarg;
                 break;
         }
     }
-    JetClassifier *jetClassifier = new JetClassifier(weightsFileName);
+    JetClassifier *jetClassifier = new JetClassifier(jetWeightsFileName);
+    cerr << "Initialized jet classifier.\n";
     TFile *ttbarFile = new TFile(ttbarFileName);
     TFile *wpjetsFile = new TFile(wpjetsFileName);
-    TFile *smwwFile = new TFile(smwwFileName);
+    TChain *smwwChain = new TChain("Delphes");
+    for (int i = 0; i < nSMFiles; i++) {
+        smwwChain->Add(smwwFileNames[i]);
+    }
 
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
 
     TTree *ttbar = (TTree*)ttbarFile->Get("Delphes");
     TTree *wpjets = (TTree*)wpjetsFile->Get("Delphes");
-    TTree *smww = (TTree*)smwwFile->Get("Delphes");
 
     ExRootTreeReader *ttbarReader = new ExRootTreeReader(ttbar);
     ExRootTreeReader *wpjetsReader = new ExRootTreeReader(wpjets);
-    ExRootTreeReader *smwwReader = new ExRootTreeReader(smww);
+    ExRootTreeReader *smwwReader = new ExRootTreeReader(smwwChain);
 
     ExRootTreeWriter *ttbarWriter = new ExRootTreeWriter(outputFile, "TTBar");
     ExRootTreeWriter *wpjetsWriter = new ExRootTreeWriter(outputFile, "WPJets");
     ExRootTreeWriter *smwwWriter = new ExRootTreeWriter(outputFile, "SMWW");
 
-    makeTrainingEvents(jetClassifier, ttbarReader, ttbarWriter, nEvents);
-    makeTrainingEvents(jetClassifier, wpjetsReader, wpjetsWriter, nEvents);
-    makeTrainingEvents(jetClassifier, smwwReader, smwwWriter, nEvents);
+    makeTrainingEvents(jetClassifier, ttbarReader, ttbarWriter, nTTBarEvents);
+    makeTrainingEvents(jetClassifier, wpjetsReader, wpjetsWriter, nWPJetsEvents);
+    makeTrainingEvents(jetClassifier, smwwReader, smwwWriter, nSMEvents);
     outputFile->Close();
 }

@@ -24,4 +24,3 @@ bool JetClassifier::isTaggingJet(Jet *jet) {
     Double_t mva_value = reader->EvaluateMVA("BDT");
     return (mva_value > JET_MVA_CUTOFF);
 }
-
