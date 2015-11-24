@@ -24,3 +24,32 @@ bool JetClassifier::isTaggingJet(Jet *jet) {
     Double_t mva_value = reader->EvaluateMVA("BDT");
     return (mva_value > JET_MVA_CUTOFF);
 }
+
+EventClassifier::EventClassifier(char *weightsFileName) {
+    reader = new TMVA::Reader();
+    reader->AddVariable("WWScatteringEvent.HadronicJetAbsEta", &HadronicJetAbsEta);
+    reader->AddVariable("WWScatteringEvent.HadronicJetPT", &HadronicJetPT);
+    reader->AddVariable("WWScatteringEvent.HadronicJetMass", &HadronicJetMass);
+    reader->AddVariable("WWScatteringEvent.MissingET", &MissingET);
+    reader->AddVariable("WWScatteringEvent.Mjj", &Mjj);
+    reader->AddVariable("WWScatteringEvent.LeptonAbsEta", &LeptonAbsEta);
+    reader->AddVariable("WWScatteringEvent.LeptonPT", &LeptonPT);
+
+    reader->BookMVA("BDT", weightsFileName);
+}
+
+bool EventClassifier::isGoodEvent(TLorentzVector *positiveJet, TLorentzVector *negativeJet, TLorentzVector *lepton, 
+        TLorentzVector *hadronicJet, Float_t MET) {
+    TLorentzVector *jetPair = new TLorentzVector(*positiveJet + *negativeJet);
+    HadronicJetAbsEta = abs(hadronicJet->Eta());
+    HadronicJetPT = hadronicJet->Phi();
+    HadronicJetMass = hadronicJet->M();
+    MissingET = MET;
+    Mjj = jetPair->M();
+    LeptonAbsEta = abs(lepton->Eta());
+    LeptonPT = lepton->Pt();
+
+    Double_t mva_value = reader->EvaluateMVA("BDT");
+    return (mva_value > EVENT_MVA_CUTOFF);
+}
+

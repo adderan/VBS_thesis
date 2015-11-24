@@ -2,8 +2,7 @@
 #include <getopt.h>
 
 #include "TMVA/Factory.h"
-
-#include "WWScatteringEvent.h"
+#include "TFile.h"
 
 
 int main(int argc, char **argv) {
@@ -28,5 +27,30 @@ int main(int argc, char **argv) {
                 break;
         }
     }
+    TFile *file = new TFile(eventTrainingFileName);
+    TTree *ttbar = (TTree*)file->Get("TTBar");
+    TTree *wpjets = (TTree*)file->Get("WPJets");
+    TTree *sm = (TTree*)file->Get("SMWW");
+
+    TFile *outputFile = new TFile(outputFileName, "RECREATE");
+    TMVA::Factory *factory = new TMVA::Factory("EventClassification", outputFile);
+    factory->AddSignalTree(sm);
+    factory->AddBackgroundTree(ttbar);
+    factory->AddBackgroundTree(wpjets);
+
+    factory->AddVariable("WWScatteringEvent.HadronicJetAbsEta");
+    factory->AddVariable("WWScatteringEvent.HadronicJetPT");
+    factory->AddVariable("WWScatteringEvent.HadronicJetMass");
+    factory->AddVariable("WWScatteringEvent.MissingET");
+    factory->AddVariable("WWScatteringEvent.Mjj");
+    factory->AddVariable("WWScatteringEvent.LeptonAbsEta");
+    factory->AddVariable("WWScatteringEvent.LeptonPT");
+
+    factory->PrepareTrainingAndTestTree("", "", "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V");
+    factory->BookMethod( TMVA::Types::kBDT, "BDTG",
+        "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedGrad:GradBaggingFraction=0.5:nCuts=20:NNodesMax=5" );
+
+    factory->TrainAllMethods();
+    outputFile->Close();
 }
 

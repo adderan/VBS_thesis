@@ -3,6 +3,7 @@
 
 #include "TMVA/Reader.h"
 #include "classes/DelphesClasses.h"
+#include "TLorentzVector.h"
 
 class JetClassifier {
 public:
@@ -16,6 +17,24 @@ public:
 
     JetClassifier(char *weightsFileName);
     bool isTaggingJet(Jet *jet);
+};
+
+
+class EventClassifier {
+public:
+    Float_t HadronicJetAbsEta;
+    Float_t HadronicJetPT;
+    Float_t HadronicJetMass;
+    Float_t MissingET;
+    Float_t Mjj;
+    Float_t LeptonAbsEta;
+    Float_t LeptonPT;
+
+    TMVA::Reader *reader;
+    
+    EventClassifier(char *weightsFileName);
+    bool isGoodEvent(TLorentzVector *positiveJet, TLorentzVector *negativeJet, TLorentzVector *lepton, 
+            TLorentzVector *hadronicJet, Float_t MET);
 };
 
 #endif

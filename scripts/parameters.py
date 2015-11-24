@@ -2,8 +2,10 @@ import os
 
 
 
-jetWeights = "ClassifierWeights/JetClassifier.xml"
-eventWeights = "ClassifierWeights/EventClassifier.xml"
+jetWeights = "weights/JetClassification_BDTG.weights.xml"
+eventWeights = "weights/EventClassification_BDTG.weights.xml"
+
+eventTrainFile = "output/EventClassifierTrainingSets.root"
 
 nTrainSMEvents = 200
 nTrainTTBarEvents = 200

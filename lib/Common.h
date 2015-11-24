@@ -29,10 +29,12 @@
 /******Parameters ********/
 
 #define JET_MVA_CUTOFF 0.5
+#define EVENT_MVA_CUTOFF 0.5
 
-/******Names of things************/
-#define WW_MASS_HISTOGRAM_NAME "WWMass"
+//Maximum Eta of lepton in WW scattering event
+#define LEPTON_ETA_CUTOFF 2.4
 
+#define LEPTON_PT_CUTOFF 25
 
 //maximum value of sqrt(DELTA_ETA^2 + DELTA_PHI^2) for anti-kt 10 jets
 #define DELTA_ETA_PHI_CUTOFF 1.0
@@ -40,11 +42,10 @@
 //maximum value of sqrt(eta^2 + phi^2) between two tracks that correspond to the same particle
 #define MAX_DELTA_R 0.6
 
-//Maximum Eta of lepton in WW scattering event
-#define LEPTON_ETA_CUTOFF 2.4
 
-#define LEPTON_PT_CUTOFF 25
 
+/******Names of things************/
+#define WW_MASS_HISTOGRAM_NAME "WWMass"
 
 
 /*----------------------- Functions ------------------------*/ 

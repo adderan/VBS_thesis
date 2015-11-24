@@ -8,6 +8,7 @@
 #include "ExRootTreeReader.h"
 #include "ExRootTreeWriter.h"
 #include "ExRootTreeBranch.h"
+#include "TClonesArray.h"
 
 #include "Common.h"
 #include "WWScatteringEvent.h"
@@ -22,7 +23,7 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
     TClonesArray *jetBranch = (TClonesArray*)reader->UseBranch("Jet");
     TClonesArray *muonBranch = (TClonesArray*)reader->UseBranch("Muon");
     TClonesArray *electronBranch = (TClonesArray*)reader->UseBranch("Electron");
-    MissingET *missingET = (MissingET*)reader->UseBranch("MissingET");
+    TClonesArray *missingETBranch = (TClonesArray*)reader->UseBranch("MissingET");
 
     int i = 0;
     int nFilled = 0;
@@ -48,12 +49,14 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
             continue;
         }
         nFilled++;
+
+        MissingET *METParticle = (MissingET*)missingETBranch->At(0);
         TLorentzVector *tagJetPair = new TLorentzVector(*positiveJet + *negativeJet);
         WWScatteringEvent *event = (WWScatteringEvent*)eventBranch->NewEntry();
         event->HadronicJetAbsEta = abs(hadronicJet->Eta());
         event->HadronicJetMass = hadronicJet->M();
         event->HadronicJetPT = hadronicJet->Pt();
-        event->MissingET = missingET->MET;
+        event->MissingET = METParticle->MET;
         event->Mjj = tagJetPair->M();
         event->LeptonAbsEta = abs(lepton->Eta());
         event->LeptonPT = lepton->Pt();
