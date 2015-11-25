@@ -1,0 +1,30 @@
+universe = vanilla
+
+# This is the actual shell script that runs
+executable=/export/home/aldenderan/ww-scattering/scripts/run_event_training_sets.py
+
+#new environmental variables
+environment = "Process=$(Process) PYTHONPATH=/export/home/aldenderan/ww-scattering/scripts/"
+
+#keep the old env variables 
+getenv = True
+
+#  Setting the priority
+Priority        = 0
+
+#  Specifies the type of machine.
+Requirements    = ( (Arch == "INTEL" || Arch == "X86_64"))
+
+#  The following files will be written out in the directory from which you submit the job
+log = logs/MakeEventTrain.$(Cluster).$(Process).log
+
+#  The next two will be written out at the end of the job; they are stdout and stderr
+output = logs/MakeEventTrain.$(Cluster).$(Process).out
+error = logs/MakeEventTrain.$(Cluster).$(Process).err
+
+#  Ask that you transfer any file that you create in the "top directory" of the job
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT_OR_EVICT
+
+#  number of queued jobs
+queue 1

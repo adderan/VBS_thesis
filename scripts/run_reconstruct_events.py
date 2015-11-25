@@ -4,13 +4,10 @@ import os
 import parameters
 import sys
 
-start = 0
-end = 20
-
 eventString = ""
-for i in range(start, end):
-    eventString += "--events smdelphes/event.%i.root " % i
+for i in range(parameters.experimentStart, parameters.experimentStop):
+    eventString += "--events %s/event.%i.root " % (parameters.smdelphes, i)
 
-cmd = "bin/ReconstructEvents %s --jetClassifierWeights %s --eventClassifierWeights %s --histogramFile output/smdelphes.root" % (eventString, parameters.jetWeights, parameters.eventWeights)
+cmd = "/export/home/aldenderan/ww-scattering/bin/ReconstructEvents %s --jetClassifierWeights %s --eventClassifierWeights %s --nEvents %s --histogramFile %s" % (eventString, parameters.jetWeights, parameters.eventWeights, parameters.nSignalExperimentEvents, parameters.smSignalHistogram)
 
 os.system(cmd)
