@@ -38,7 +38,7 @@ EventClassifier::EventClassifier(char *weightsFileName) {
     reader->BookMVA("BDT", weightsFileName);
 }
 
-bool EventClassifier::isGoodEvent(TLorentzVector *positiveJet, TLorentzVector *negativeJet, TLorentzVector *lepton, 
+Double_t EventClassifier::ScoreEvent(TLorentzVector *positiveJet, TLorentzVector *negativeJet, TLorentzVector *lepton, 
         TLorentzVector *hadronicJet, Float_t MET) {
     TLorentzVector *jetPair = new TLorentzVector(*positiveJet + *negativeJet);
     HadronicJetAbsEta = abs(hadronicJet->Eta());
@@ -49,7 +49,6 @@ bool EventClassifier::isGoodEvent(TLorentzVector *positiveJet, TLorentzVector *n
     LeptonAbsEta = abs(lepton->Eta());
     LeptonPT = lepton->Pt();
 
-    Double_t mva_value = reader->EvaluateMVA("BDT");
-    return (mva_value > EVENT_MVA_CUTOFF);
+    return reader->EvaluateMVA("BDT");
 }
 

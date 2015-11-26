@@ -65,6 +65,10 @@ int main(int argc, char **argv) {
 
     TFile *histogramFile = new TFile(histogramFileName, "RECREATE");
     TH1F *ww_mass_hist = new TH1F(WW_MASS_HISTOGRAM_NAME, "WW Invariant Mass", 100, 0, 2500);
+    int nClassifierFails = 0;
+    int nGoodEvents = 0;
+
+    TH1F *TMVAResponseHist = new TH1F("TMVAResponse", "TMVA Response", 100, -2, 2);
 
     for (int i = 0; i < nEvents; i++) {
         reader->ReadEntry(i);
@@ -88,11 +92,16 @@ int main(int argc, char **argv) {
             std::cerr << "nElectrons: " << nElectrons << " nMuons: " << nMuons << "\n";
             continue;
         }
+        nGoodEvents++;
 
         //Decide whether this is a background event (W+jets or TTbar) or signal event (ww scattering) 
         //using the event classifier
-        if (!eventClassifier->isGoodEvent(positiveJet, negativeJet, lepton, hadronicJet, METParticle->MET)) {
+        Double_t score = eventClassifier->ScoreEvent(positiveJet, negativeJet, 
+                    lepton, hadronicJet, METParticle->MET);
+        TMVAResponseHist->Fill(score);
+        if (score < EVENT_MVA_CUTOFF) {
             std::cerr << "Event didn't pass classifier.\n";
+            nClassifierFails++;
             continue;
         }
 
@@ -103,6 +112,8 @@ int main(int argc, char **argv) {
         ww_mass_hist->Fill(WW->M());
     }
     ww_mass_hist->Write();
+    TMVAResponseHist->Write();
     
     histogramFile->Close();
+    std::cerr << "Out of " << nGoodEvents << " good events, " << nClassifierFails << " failed the classifier.\n";
 }

@@ -33,8 +33,8 @@ public:
     TMVA::Reader *reader;
     
     EventClassifier(char *weightsFileName);
-    bool isGoodEvent(TLorentzVector *positiveJet, TLorentzVector *negativeJet, TLorentzVector *lepton, 
-            TLorentzVector *hadronicJet, Float_t MET);
+    Double_t ScoreEvent(TLorentzVector *positiveJet, TLorentzVector *negativeJet, 
+            TLorentzVector *lepton, TLorentzVector *hadronicJet, Float_t MET);
 };
 
 #endif

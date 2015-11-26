@@ -50,7 +50,6 @@ int main(int argc, char **argv) {
     factory->BookMethod( TMVA::Types::kBDT, "BDTG",
         "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20"  );
     factory->TrainAllMethods();
-    factory->EvaluateAllMethods();
     outputFile->Close();
 }
 

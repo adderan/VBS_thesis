@@ -1,7 +1,7 @@
 universe = vanilla
 
 # This is the actual shell script that runs
-executable=/export/home/aldenderan/ww-scattering/scripts/run_reconstruct_events.py
+executable=/export/home/aldenderan/ww-scattering/scripts/run_reconstruct_signal.py
 
 #new environmental variables
 environment = "Process=$(Process) PYTHONPATH=/export/home/aldenderan/ww-scattering/scripts/"

@@ -106,6 +106,8 @@ TLorentzVector *FindHadronicJet(TClonesArray *jets) {
     if (!maxPTJet) {
         return NULL;
     }
+    if (maxPTJet->BTag != 0) return NULL;
+
     TLorentzVector *jetVector = new TLorentzVector();
     jetVector->SetPtEtaPhiM(maxPTJet->PT, maxPTJet->Eta, maxPTJet->Phi, maxPTJet->Mass);
     return jetVector;
