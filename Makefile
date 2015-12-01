@@ -4,7 +4,7 @@ tmpPath = ${PWD}/tmp
 
 libsources = $(wildcard $(libPath)/*.cpp)
 headers = $(wildcard $(libPath)/*.h)
-executables = ${binPath}/MakeJetTrainingSets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier ${binPath}/MakeEventTrainingSets ${binPath}/ReconstructEvents ${binPath}/WWReconstructTest ${binPath}/TrainEventClassifier
+executables = ${binPath}/MakeJetTrainingSets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier ${binPath}/MakeEventTrainingSets ${binPath}/ReconstructEvents ${binPath}/WWReconstructTest ${binPath}/TrainEventClassifier ${binPath}/HypothesisTest
 
 
 CFLAGS=-g -O0 -Wall -Werror `root-config --cflags --glibs` -I ${libPath} -I delphes -I ExRootAnalysis/ExRootAnalysis -L delphes/ -L ExRootAnalysis -Wl,-rpath,${PWD}/delphes -Wl,-rpath,${PWD}/ExRootAnalysis
@@ -34,6 +34,9 @@ ${binPath}/WWReconstructTest: test/WWReconstructTest.cpp ${headers} ${libsources
 
 ${binPath}/TrainEventClassifier: src/TrainEventClassifier.cpp ${headers} ${libsources} ${external} ${dict}
 	${CXX} ${CFLAGS} -o ${binPath}/TrainEventClassifier src/TrainEventClassifier.cpp ${libsources} ${dict} -lDelphes -lExRootAnalysis -lTMVA
+
+${binPath}/HypothesisTest: src/HypothesisTest.cpp ${headers} ${libsources} ${dict} ${external}
+	${CXX} ${CFLAGS} -o ${binPath}/HypothesisTest src/HypothesisTest.cpp ${libsources} ${dict} -lDelphes -lExRootAnalysis -lTMVA -lRooFit -lRooStats
 
 delphes/libDelphes.so:
 	cd delphes && make

@@ -42,7 +42,7 @@
 //maximum value of sqrt(eta^2 + phi^2) between two tracks that correspond to the same particle
 #define MAX_DELTA_R 0.6
 
-
+#define N_HYPOTHESIS_TEST_EVENTS 1000
 
 /******Names of things************/
 #define WW_MASS_HISTOGRAM_NAME "WWMass"
