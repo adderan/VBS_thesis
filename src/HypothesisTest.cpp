@@ -130,8 +130,15 @@ int main(int argc, char **argv) {
     leg->Draw();
     canvas->Write();
 
-    RooRealVar *ttbarWeight = new RooRealVar("ttbarWeight", "ttbarWeight", 0.0, 1.0, 0.45);
-    RooRealVar *wpjetsWeight = new RooRealVar("wpjetsWeight", "wpjetsWeight", 0.0, 1.0, 0.45);
+    Double_t ww_x = WW_CROSS_SECTION * smww->GetEntries();
+    Double_t ttbar_x = TTBAR_CROSS_SECTION * ttbar->GetEntries();
+    Double_t wpjets_x = WPJETS_CROSS_SECTION * wpjets->GetEntries();
+
+    Double_t ttbar_weight = ttbar_x/(ttbar_x + wpjets_x + ww_x);
+    Double_t wpjets_weight = wpjets_x/(wpjets_x + ttbar_x + ww_x);
+
+    RooRealVar *ttbarWeight = new RooRealVar("ttbarWeight", "ttbarWeight", 0.0, 1.0, ttbar_weight);
+    RooRealVar *wpjetsWeight = new RooRealVar("wpjetsWeight", "wpjetsWeight", 0.0, 1.0, wpjets_weight);
     ttbarWeight->setConstant();
     wpjetsWeight->setConstant();
 
@@ -168,11 +175,11 @@ int main(int argc, char **argv) {
     outputFile->Close();
 
     
- 	RooArgSet poi(*mu);
-	RooArgSet *nullParams = (RooArgSet*) poi.snapshot(); 
-	
-	nullParams->setRealValue("mu", 0.0); 
-   
+    RooArgSet poi(*mu);
+    RooArgSet *nullParams = (RooArgSet*) poi.snapshot(); 
+
+    nullParams->setRealValue("mu", 0.0); 
+
     RooStats::ProfileLikelihoodCalculator plc(*generatedData, *model, poi, 0.05, nullParams);
 
 

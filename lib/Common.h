@@ -25,6 +25,10 @@
 #define ELECTRON_MASS 0.000510
 #define W_MASS 80.4
 
+#define WW_CROSS_SECTION 30.05 //fb
+#define TTBAR_CROSS_SECTION 2841.93 
+#define WPJETS_CROSS_SECTION 9999.0 
+
 
 /******Parameters ********/
 
@@ -43,6 +47,7 @@
 #define MAX_DELTA_R 0.6
 
 #define N_HYPOTHESIS_TEST_EVENTS 1000
+
 
 /******Names of things************/
 #define WW_MASS_HISTOGRAM_NAME "WWMass"
