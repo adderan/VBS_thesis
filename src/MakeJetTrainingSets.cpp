@@ -31,7 +31,7 @@ void CopyFromJet(TrainJet *trainJet, Jet *jet) {
 }
 
 void createTrainingSets(ExRootTreeReader *vbfnloReader, ExRootTreeReader *delphesReader, 
-        ExRootTreeWriter *taggingJets, ExRootTreeWriter *backgroundJets) {
+        ExRootTreeWriter *taggingJets, ExRootTreeWriter *backgroundJets, int start, int stop) {
     //assert(vbfnloReader->GetEntries() == delphesReader->GetEntries());
 
     ExRootTreeBranch *taggingJetsBranch = taggingJets->NewBranch("TrainJet", TrainJet::Class());
@@ -41,7 +41,7 @@ void createTrainingSets(ExRootTreeReader *vbfnloReader, ExRootTreeReader *delphe
     TClonesArray *jetBranch = delphesReader->UseBranch("Jet");
     TClonesArray *particleBranch = vbfnloReader->UseBranch("Particle");
     
-    for (int i = 0; i < delphesReader->GetEntries(); i++) {
+    for (int i = start; i < stop; i++) {
         cerr << "Processing event: " << i << "\n";
         vbfnloReader->ReadEntry(i);
         delphesReader->ReadEntry(i);
@@ -102,15 +102,18 @@ int main(int argc, char **argv) {
     char *vbfnloFileName = NULL;
     char *delphesFileName = NULL;
     char *outputFileName = NULL;
+    int start, stop;
     int c;
     while(1) {
         int option_index = 0;
         static struct option long_options[] = {
             {"inputDelphesFile", required_argument, 0, 'a'},
             {"inputVBFNLOFile", required_argument, 0, 'b'},
-            {"outputFile", required_argument, 0, 'c'}
+            {"outputFile", required_argument, 0, 'c'},
+            {"start", required_argument, 0, 'd'},
+            {"stop", required_argument, 0, 'e'}
         };
-        c = getopt_long(argc, argv, "abc:", long_options, &option_index);
+        c = getopt_long(argc, argv, "abcde:", long_options, &option_index);
         if (c==-1)
             break;
         switch(c) {
@@ -122,6 +125,12 @@ int main(int argc, char **argv) {
                 break;
             case 'c':
                 outputFileName = optarg;
+                break;
+            case 'd':
+                start = atoi(optarg);
+                break;
+            case 'e':
+                stop = atoi(optarg);
                 break;
         }
     }
@@ -136,7 +145,7 @@ int main(int argc, char **argv) {
     ExRootTreeWriter *tagJets = new ExRootTreeWriter(&outputFile, "Tagging");
     ExRootTreeWriter *backgroundJets = new ExRootTreeWriter(&outputFile, "Background");
 
-    createTrainingSets(vbfnloReader, delphesReader, tagJets, backgroundJets);
+    createTrainingSets(vbfnloReader, delphesReader, tagJets, backgroundJets, start, stop);
     tagJets->Write();
     //backgroundJets->Write();
     outputFile.Close();

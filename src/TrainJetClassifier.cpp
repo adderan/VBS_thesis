@@ -48,8 +48,9 @@ int main(int argc, char **argv) {
     factory->AddVariable("TrainJet.Energy");
 
     factory->PrepareTrainingAndTestTree("", "", "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V");
-    factory->BookMethod( TMVA::Types::kBDT, "BDTG",
-        "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedGrad:GradBaggingFraction=0.5:nCuts=20:NNodesMax=5" );
+    factory->BookMethod( TMVA::Types::kBDT, "BDT",
+						   "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
+
 
     factory->TrainAllMethods();
     factory->TestAllMethods();

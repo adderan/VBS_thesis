@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
     char *jetWeightsFileName = NULL;
     char *eventWeightsFileName = NULL;
     char *histogramFileName = NULL;
-    int nEvents = 0;
     int nEventsFiles = 0;
+    int start, stop;
     int c;
     while(1) {
         int option_index = 0;
@@ -24,10 +24,11 @@ int main(int argc, char **argv) {
             {"eventsFile", required_argument, 0, 'a'},
             {"jetClassifierWeights", required_argument, 0, 'b'},
             {"eventClassifierWeights", required_argument, 0, 'c'},
-            {"nEvents", required_argument, 0, 'd'},
-            {"histogramFile", required_argument, 0, 'e'},
+            {"histogramFile", required_argument, 0, 'd'},
+            {"start", required_argument, 0, 'e'},
+            {"stop", required_argument, 0, 'f'}
         };
-        c = getopt_long(argc, argv, "abcde:", long_options, &option_index);
+        c = getopt_long(argc, argv, "abcdef:", long_options, &option_index);
         if (c==-1)
             break;
         switch(c) {
@@ -42,10 +43,13 @@ int main(int argc, char **argv) {
                 eventWeightsFileName = optarg;
                 break;
             case 'd':
-                nEvents = atoi(optarg);
+                histogramFileName = optarg;
                 break;
             case 'e':
-                histogramFileName = optarg;
+                start = atoi(optarg);
+                break;
+            case 'f':
+                stop = atoi(optarg);
                 break;
         }
     }
@@ -70,7 +74,7 @@ int main(int argc, char **argv) {
 
     TH1F *TMVAResponseHist = new TH1F("TMVAResponse", "TMVA Response", 100, -2, 2);
 
-    for (int i = 0; i < nEvents; i++) {
+    for (int i = start; i < stop; i++) {
         if (i % 10 == 0) std::cerr << "Number of events: " << i << "\n";
         reader->ReadEntry(i);
         struct WWScatteringComponents *event = new WWScatteringComponents(jetClassifier, 

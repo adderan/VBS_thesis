@@ -12,9 +12,9 @@ elif sys.argv[1] == "ops":
     histogramFile = parameters.opsSignalHistogram
 
 eventString = ""
-for i in range(parameters.experimentStart, parameters.experimentStop):
+for i in range(50):
     eventString += "--events %s/event.%i.root " % (eventsFolder, i)
 
-cmd = "/export/home/aldenderan/ww-scattering/bin/ReconstructEvents %s --jetClassifierWeights %s --eventClassifierWeights %s --nEvents %s --histogramFile %s" % (eventString, parameters.jetWeights, parameters.eventWeights, parameters.nSignalExperimentEvents, histogramFile)
+cmd = "/export/home/aldenderan/ww-scattering/bin/ReconstructEvents %s --jetClassifierWeights %s --eventClassifierWeights %s --histogramFile %s --start %s --stop %s" % (eventString, parameters.jetWeights, parameters.eventWeights, histogramFile, parameters.experimentStart, parameters.experimentStop)
 
 os.system(cmd)
