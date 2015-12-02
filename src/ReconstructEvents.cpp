@@ -71,33 +71,20 @@ int main(int argc, char **argv) {
     TH1F *TMVAResponseHist = new TH1F("TMVAResponse", "TMVA Response", 100, -2, 2);
 
     for (int i = 0; i < nEvents; i++) {
+        if (i % 10 == 0) std::cerr << "Number of events: " << i << "\n";
         reader->ReadEntry(i);
-        MissingET *METParticle = (MissingET*)ETBranch->At(0);
-
-        TLorentzVector *positiveJet = new TLorentzVector();
-        TLorentzVector *negativeJet = new TLorentzVector();
-        bool found_tag_jets = FindTagJetPair(jetClassifier, jetBranch, positiveJet, negativeJet);
-
-        TLorentzVector *lepton = new TLorentzVector();
-        bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
-
-        TLorentzVector *hadronicJet = FindHadronicJet(jetBranch);
-
+        struct WWScatteringComponents *event = new WWScatteringComponents(jetClassifier, 
+                electronBranch, muonBranch, jetBranch, ETBranch);
+        
         //Can't proceed unless all final-state particles were found
-        if (!(found_tag_jets && found_lepton && hadronicJet)) {
-            std::cerr << "Didn't find all components. found_tag_jets: " << found_tag_jets  
-                << " found_lepton: " << found_lepton  << " hadronicJet: " << hadronicJet << "\n";
-            int nElectrons = electronBranch->GetEntriesFast();
-            int nMuons = muonBranch->GetEntriesFast();
-            std::cerr << "nElectrons: " << nElectrons << " nMuons: " << nMuons << "\n";
+        if (!event->isGoodEvent) {
             continue;
         }
         nGoodEvents++;
 
         //Decide whether this is a background event (W+jets or TTbar) or signal event (ww scattering) 
         //using the event classifier
-        Double_t score = eventClassifier->ScoreEvent(positiveJet, negativeJet, 
-                    lepton, hadronicJet, METParticle->MET);
+        Double_t score = eventClassifier->ScoreEvent(event);
         TMVAResponseHist->Fill(score);
         if (score < EVENT_MVA_CUTOFF) {
             std::cerr << "Event didn't pass classifier.\n";
@@ -105,9 +92,7 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        TLorentzVector *MET = new TLorentzVector();
-        MET->SetPtEtaPhiE(METParticle->MET, METParticle->Eta, METParticle->Phi, METParticle->MET);
-        TLorentzVector *WW = ReconstructWW(lepton, hadronicJet, MET);
+        TLorentzVector *WW = ReconstructWW(event->lepton, event->hadronicJet, event->missingET);
         if (!WW) continue;
         ww_mass_hist->Fill(WW->M());
     }

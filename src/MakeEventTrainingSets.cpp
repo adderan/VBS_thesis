@@ -36,30 +36,24 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader, ExR
 
         reader->ReadEntry(i);
         i++;
-        TLorentzVector *positiveJet = new TLorentzVector();
-        TLorentzVector *negativeJet = new TLorentzVector();
-        bool found_tag_jets = FindTagJetPair(classifier, jetBranch, positiveJet, negativeJet);
-
-        TLorentzVector *lepton = new TLorentzVector();
-        bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
-
-        TLorentzVector *hadronicJet = FindHadronicJet(jetBranch);
-        if (!(found_tag_jets && found_lepton && hadronicJet)) {
-            cerr << "Event didn't pass.\n";
+        struct WWScatteringComponents *components = new WWScatteringComponents(classifier, electronBranch,
+                muonBranch, jetBranch, missingETBranch);
+        if(!components->isGoodEvent) {
+            std::cerr << "Event didn't have the required components.\n";
             continue;
         }
         nFilled++;
+        std::cerr << "Filled " << nFilled << " events.\n";
 
-        MissingET *METParticle = (MissingET*)missingETBranch->At(0);
-        TLorentzVector *tagJetPair = new TLorentzVector(*positiveJet + *negativeJet);
+        TLorentzVector *tagJetPair = new TLorentzVector(*components->positiveJet + *components->negativeJet);
         WWScatteringEvent *event = (WWScatteringEvent*)eventBranch->NewEntry();
-        event->HadronicJetAbsEta = abs(hadronicJet->Eta());
-        event->HadronicJetMass = hadronicJet->M();
-        event->HadronicJetPT = hadronicJet->Pt();
-        event->MissingET = METParticle->MET;
+        event->HadronicJetAbsEta = abs(components->hadronicJet->Eta());
+        event->HadronicJetMass = components->hadronicJet->M();
+        event->HadronicJetPT = components->hadronicJet->Pt();
+        event->MissingET = components->missingET->E();
         event->Mjj = tagJetPair->M();
-        event->LeptonAbsEta = abs(lepton->Eta());
-        event->LeptonPT = lepton->Pt();
+        event->LeptonAbsEta = abs(components->lepton->Eta());
+        event->LeptonPT = components->lepton->Pt();
         writer->Fill();
         writer->Clear();
     }

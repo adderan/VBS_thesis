@@ -29,6 +29,27 @@ double GetJetEnergy(Jet *jet) {
     return tlv->E();
 }
 
+//Match a WW Scattering event from a Delphes Tree
+WWScatteringComponents::WWScatteringComponents(JetClassifier *jetClassifier, 
+        TClonesArray *electronBranch, 
+        TClonesArray *muonBranch, TClonesArray *jetBranch, TClonesArray *ETBranch) {
+    isGoodEvent = true;
+    MissingET *METParticle = (MissingET*)ETBranch->At(0);
+    //if (METParticle->MET == 0) isGoodEvent = false;
+    missingET = new TLorentzVector();
+    missingET->SetPtEtaPhiE(METParticle->MET, METParticle->Eta, METParticle->Phi, METParticle->MET);
+
+    positiveJet = new TLorentzVector();
+    negativeJet = new TLorentzVector();
+    bool found_tag_jets = FindTagJetPair(jetClassifier, jetBranch, positiveJet, negativeJet);
+
+    lepton = new TLorentzVector();
+    bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
+
+    hadronicJet = FindHadronicJet(jetBranch);
+    if(!(found_tag_jets && found_lepton && hadronicJet)) isGoodEvent = false;
+}
+
 //Finds the two tagging high-eta tagging jets on opposite eta hemispheres, 
 //using the provided tagging jet classifier
 bool FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, 
@@ -174,7 +195,8 @@ void MatchPartonWWScatteringEvent(TClonesArray *particles, TLorentzVector **lept
     }
 }
 
-TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJet, TLorentzVector *missingET) {
+TLorentzVector *ReconstructWW(TLorentzVector *lepton, TLorentzVector *hadronicJet, 
+        TLorentzVector *missingET) {
     TLorentzVector *neutrino = ReconstructNeutrino(missingET, lepton);
     if (!neutrino) return NULL;
     

@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
 
 
-    TMVA::Factory *factory = new TMVA::Factory("JetMatching", outputFile);
+    TMVA::Factory *factory = new TMVA::Factory("JetClassification", outputFile);
     factory->AddSignalTree(tagJets, 1.0);
     factory->AddBackgroundTree(backgroundJets, 1.0);
 
@@ -52,6 +52,8 @@ int main(int argc, char **argv) {
         "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedGrad:GradBaggingFraction=0.5:nCuts=20:NNodesMax=5" );
 
     factory->TrainAllMethods();
+    factory->TestAllMethods();
+    factory->EvaluateAllMethods();
     outputFile->Close();
 
     delete factory;

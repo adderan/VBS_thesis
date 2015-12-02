@@ -38,16 +38,15 @@ EventClassifier::EventClassifier(char *weightsFileName) {
     reader->BookMVA("BDT", weightsFileName);
 }
 
-Double_t EventClassifier::ScoreEvent(TLorentzVector *positiveJet, TLorentzVector *negativeJet, TLorentzVector *lepton, 
-        TLorentzVector *hadronicJet, Float_t MET) {
-    TLorentzVector *jetPair = new TLorentzVector(*positiveJet + *negativeJet);
-    HadronicJetAbsEta = abs(hadronicJet->Eta());
-    HadronicJetPT = hadronicJet->Phi();
-    HadronicJetMass = hadronicJet->M();
-    MissingET = MET;
+Double_t EventClassifier::ScoreEvent(struct WWScatteringComponents *event) {
+    TLorentzVector *jetPair = new TLorentzVector(*event->positiveJet + *event->negativeJet);
+    HadronicJetAbsEta = abs(event->hadronicJet->Eta());
+    HadronicJetPT = event->hadronicJet->Phi();
+    HadronicJetMass = event->hadronicJet->M();
+    MissingET = event->missingET->E();
     Mjj = jetPair->M();
-    LeptonAbsEta = abs(lepton->Eta());
-    LeptonPT = lepton->Pt();
+    LeptonAbsEta = abs(event->lepton->Eta());
+    LeptonPT = event->lepton->Pt();
 
     return reader->EvaluateMVA("BDT");
 }
