@@ -32,8 +32,8 @@
 
 /******Parameters ********/
 
-#define JET_MVA_CUTOFF 0.086
-#define EVENT_MVA_CUTOFF 0.1
+#define JET_MVA_CUTOFF 0.0
+#define EVENT_MVA_CUTOFF -0.002
 
 //Maximum Eta of lepton in WW scattering event
 #define LEPTON_ETA_CUTOFF 2.4

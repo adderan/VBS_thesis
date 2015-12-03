@@ -35,7 +35,7 @@ WWScatteringComponents::WWScatteringComponents(JetClassifier *jetClassifier,
         TClonesArray *muonBranch, TClonesArray *jetBranch, TClonesArray *ETBranch) {
     isGoodEvent = true;
     MissingET *METParticle = (MissingET*)ETBranch->At(0);
-    //if (METParticle->MET == 0) isGoodEvent = false;
+    if (!(METParticle->MET > 0.0)) isGoodEvent = false;
     missingET = new TLorentzVector();
     missingET->SetPtEtaPhiE(METParticle->MET, METParticle->Eta, METParticle->Phi, METParticle->MET);
 
