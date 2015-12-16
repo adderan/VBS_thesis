@@ -216,8 +216,7 @@ TLorentzVector *ReconstructNeutrino(TLorentzVector *MET, TLorentzVector *lepton)
     double pxMiss = MET->Px();
     double pyMiss = MET->Py();
     double ptMiss = MET->Pt();
-    const double WMass = 80.4;
-    double alpha = pow(WMass,2)+pow((pxMiss+lepton->Px()),2)+pow((pyMiss+lepton->Py()),2) -
+    double alpha = pow(W_MASS,2)+pow((pxMiss+lepton->Px()),2)+pow((pyMiss+lepton->Py()),2) -
         pow(lepton->E(),2);
     double beta = 0.5 * ( alpha-pow(ptMiss,2)+pow(lepton->Pz(),2) );
     double gamma = -( beta*beta - ( pow(lepton->E(),2)*pow(ptMiss,2) ) )

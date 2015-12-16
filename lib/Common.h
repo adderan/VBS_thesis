@@ -27,7 +27,8 @@
 
 #define WW_CROSS_SECTION 30.05 //fb
 #define TTBAR_CROSS_SECTION 2841.93 
-#define WPJETS_CROSS_SECTION 9999.0 
+#define WP3JETS_CROSS_SECTION 9999.0 
+#define WP4JETS_CROSS_SECTION 9999.0
 
 
 /******Parameters ********/

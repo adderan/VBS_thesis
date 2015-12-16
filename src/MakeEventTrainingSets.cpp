@@ -54,7 +54,8 @@ void makeTrainingEvents(JetClassifier *classifier, ExRootTreeReader *reader,
 
 int main(int argc, char **argv) {
     char *ttbarFileName = NULL;
-    char *wpjetsFileName = NULL;
+    char *wp3jetsFileName = NULL;
+    char *wp4jetsFileName = NULL;
     char *smwwFileNames[50];
     char *jetWeightsFileName = NULL;
     char *outputFileName = NULL;
@@ -65,14 +66,15 @@ int main(int argc, char **argv) {
         int option_index = 0;
         static struct option long_options[] = {
             {"ttbarFile", required_argument, 0, 'a'},
-            {"wpjetsFile", required_argument, 0, 'b'},
-            {"smwwFile", required_argument, 0, 'c'},
-            {"jetWeights", required_argument, 0, 'd'},
-            {"outputFile", required_argument, 0, 'e'},
-            {"start", required_argument, 0, 'f'},
-            {"stop", required_argument, 0, 'g'}
+            {"wp3jetsFile", required_argument, 0, 'b'},
+            {"wp4jetsFile", required_argument, 0, 'c'},
+            {"smwwFile", required_argument, 0, 'd'},
+            {"jetWeights", required_argument, 0, 'e'},
+            {"outputFile", required_argument, 0, 'f'},
+            {"start", required_argument, 0, 'g'},
+            {"stop", required_argument, 0, 'h'}
         };
-        c = getopt_long(argc, argv, "abcdefg:", long_options, &option_index);
+        c = getopt_long(argc, argv, "abcdefgh:", long_options, &option_index);
         if (c==-1)
             break;
         switch(c) {
@@ -80,22 +82,25 @@ int main(int argc, char **argv) {
                 ttbarFileName = optarg;
                 break;
             case 'b':
-                wpjetsFileName = optarg; 
+                wp3jetsFileName = optarg; 
                 break;
             case 'c':
+                wp4jetsFileName = optarg;
+                break;
+            case 'd':
                 smwwFileNames[nSMFiles] = optarg;
                 nSMFiles++;
                 break;
-            case 'd':
+            case 'e':
                 jetWeightsFileName = optarg;
                 break;
-            case 'e':
+            case 'f':
                 outputFileName = optarg;
                 break;
-            case 'f':
+            case 'g':
                 start = atoi(optarg);
                 break;
-            case 'g':
+            case 'h':
                 stop = atoi(optarg);
                 break;
         }
@@ -103,7 +108,8 @@ int main(int argc, char **argv) {
     JetClassifier *jetClassifier = new JetClassifier(jetWeightsFileName);
     cerr << "Initialized jet classifier.\n";
     TFile *ttbarFile = new TFile(ttbarFileName);
-    TFile *wpjetsFile = new TFile(wpjetsFileName);
+    TFile *wp3jetsFile = new TFile(wp3jetsFileName);
+    TFile *wp4jetsFile = new TFile(wp4jetsFileName);
     TChain *smwwChain = new TChain("Delphes");
     for (int i = 0; i < nSMFiles; i++) {
         smwwChain->Add(smwwFileNames[i]);
@@ -112,18 +118,22 @@ int main(int argc, char **argv) {
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
 
     TTree *ttbar = (TTree*)ttbarFile->Get("Delphes");
-    TTree *wpjets = (TTree*)wpjetsFile->Get("Delphes");
+    TTree *wp3jets = (TTree*)wp3jetsFile->Get("Delphes");
+    TTree *wp4jets = (TTree*)wp4jetsFile->Get("Delphes");
 
     ExRootTreeReader *ttbarReader = new ExRootTreeReader(ttbar);
-    ExRootTreeReader *wpjetsReader = new ExRootTreeReader(wpjets);
+    ExRootTreeReader *wp3jetsReader = new ExRootTreeReader(wp3jets);
+    ExRootTreeReader *wp4jetsReader = new ExRootTreeReader(wp4jets);
     ExRootTreeReader *smwwReader = new ExRootTreeReader(smwwChain);
 
     ExRootTreeWriter *ttbarWriter = new ExRootTreeWriter(outputFile, "TTBar");
-    ExRootTreeWriter *wpjetsWriter = new ExRootTreeWriter(outputFile, "WPJets");
+    ExRootTreeWriter *wp3jetsWriter = new ExRootTreeWriter(outputFile, "WP3Jets");
+    ExRootTreeWriter *wp4jetsWriter = new ExRootTreeWriter(outputFile, "WP4Jets");
     ExRootTreeWriter *smwwWriter = new ExRootTreeWriter(outputFile, "SMWW");
 
     makeTrainingEvents(jetClassifier, ttbarReader, ttbarWriter, start, stop);
-    makeTrainingEvents(jetClassifier, wpjetsReader, wpjetsWriter, start, stop);
+    makeTrainingEvents(jetClassifier, wp3jetsReader, wp3jetsWriter, start, stop);
+    makeTrainingEvents(jetClassifier, wp4jetsReader, wp4jetsWriter, start, stop);
     makeTrainingEvents(jetClassifier, smwwReader, smwwWriter, start, stop);
     outputFile->Close();
 }

@@ -73,6 +73,7 @@ int main(int argc, char **argv) {
     int nGoodEvents = 0;
 
     TH1F *TMVAResponseHist = new TH1F("TMVAResponse", "TMVA Response", 100, -2, 2);
+    TH1F *leptonicWMass = new TH1F("LeptonicWMass", "Leptonic W Invariant Mass", 100, 0, 200);
 
     for (int i = start; i < stop; i++) {
         if (i % 10 == 0) std::cerr << "Number of events: " << i << "\n";
@@ -96,12 +97,18 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        TLorentzVector *WW = ReconstructWW(event->lepton, event->hadronicJet, event->missingET);
-        if (!WW) continue;
+        TLorentzVector *neutrino = ReconstructNeutrino(event->missingET, event->lepton);
+        if (!neutrino) continue;
+        TLorentzVector *leptonicW = new TLorentzVector(*neutrino + *event->lepton);
+        leptonicWMass->Fill(leptonicW->M());
+        if (!(leptonicW->M() > 75 && leptonicW->M() < 85)) continue;
+        TLorentzVector *WW = new TLorentzVector(*leptonicW + *event->hadronicJet);
+
         ww_mass_hist->Fill(WW->M());
     }
     ww_mass_hist->Write();
     TMVAResponseHist->Write();
+    leptonicWMass->Write();
     
     histogramFile->Close();
     std::cerr << "Out of " << nGoodEvents << " good events, " << nClassifierFails << " failed the classifier.\n";

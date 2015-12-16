@@ -2,6 +2,6 @@
 import parameters
 import os
 
-cmd = "bin/TrainEventClassifier --eventTrainFile %s --outputFile output/EventTrainLog.root" % parameters.eventTrainFile
+cmd = "bin/TrainEventClassifier --eventTrainFile %s --outputFile output/TrainingResults/EventTrainLog.root" % parameters.eventTrainFile
 
 os.system(cmd)

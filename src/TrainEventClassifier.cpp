@@ -29,14 +29,16 @@ int main(int argc, char **argv) {
     }
     TFile *file = new TFile(eventTrainingFileName);
     TTree *ttbar = (TTree*)file->Get("TTBar");
-    TTree *wpjets = (TTree*)file->Get("WPJets");
+    TTree *wp3jets = (TTree*)file->Get("WP3Jets");
+    TTree *wp4jets = (TTree*)file->Get("WP4Jets");
     TTree *sm = (TTree*)file->Get("SMWW");
 
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
     TMVA::Factory *factory = new TMVA::Factory("EventClassification", outputFile);
     factory->AddSignalTree(sm);
     factory->AddBackgroundTree(ttbar);
-    factory->AddBackgroundTree(wpjets);
+    factory->AddBackgroundTree(wp3jets);
+    factory->AddBackgroundTree(wp4jets);
 
     factory->AddVariable("WWScatteringEvent.HadronicJetAbsEta");
     factory->AddVariable("WWScatteringEvent.HadronicJetPT");
