@@ -2,6 +2,7 @@ import os
 
 repo = "/export/home/aldenderan/ww-scattering/"
 events = "/export/share/data/nkgarner/"
+partonEventsDir = os.path.join(events, "VBFNLO-2.7.0_OUTPUT/14TeV_201_100K_Events_1500mjj")
 signalEventsDir = os.path.join(events, "Delphes_OUTPUT/VBFNLO_100K_Events")
 backgroundEventsDir = os.path.join(events, "Delphes_OUTPUT/MG5_v2_2_1_100K_Events")
 

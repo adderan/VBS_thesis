@@ -70,28 +70,39 @@ void createTrainingSets(ExRootTreeReader *vbfnloReader, ExRootTreeReader *delphe
             }
 
         }
+        if (!positiveParton && negativeParton) continue;
         //Try to match the tagging partons with tagging jets in the Delphes output
         int nJets = jetBranch->GetEntriesFast();
+        int positiveJetIndex = -1;
+        int negativeJetIndex = -1;
         for (int i = 0; i < nJets; i++) {
             Jet *jet = (Jet*)jetBranch->At(i);
-            if((positiveParton && deltaR(jet->Eta, jet->Phi, positiveParton->Eta, positiveParton->Phi) < MAX_DELTA_R) ||
-                    (negativeParton && deltaR(jet->Eta, jet->Phi, negativeParton->Eta, 
-                                              negativeParton->Phi) < MAX_DELTA_R)) {
-                cerr << "Matched tagging parton\n";
+            Float_t positiveDr = deltaR(jet->Eta, jet->Phi, positiveParton->Eta, positiveParton->Phi);
+            Float_t negativeDr = deltaR(jet->Eta, jet->Phi, negativeParton->Eta, negativeParton->Phi);
+            if (positiveDr < MAX_DELTA_R) positiveJetIndex = i;
+            else if (negativeDr < MAX_DELTA_R) negativeJetIndex = i;
+        }
+
+        if (positiveJetIndex == -1 || negativeJetIndex == -1) continue;
+
+        //Since this event has two matched tagging jets, use those as signal and the 
+        //other jets in the event as background.
+        for (int i = 0; i < nJets; i++) {
+            Jet *jet = (Jet*)jetBranch->At(i);
+            if (i == positiveJetIndex || i == negativeJetIndex) {
                 TrainJet *newJet = (TrainJet*)taggingJetsBranch->NewEntry();
                 CopyFromJet(newJet, jet);
                 taggingJets->Fill();
                 taggingJets->Clear();
             }
             else {
-                cerr << "Jet didn't match tagging parton\n";
                 TrainJet *newJet = (TrainJet*)backgroundJetsBranch->NewEntry();
                 CopyFromJet(newJet, jet);
                 backgroundJets->Fill();
                 backgroundJets->Clear();
             }
-        }
 
+        }
 
     }
 
