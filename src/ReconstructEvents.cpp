@@ -69,11 +69,10 @@ int main(int argc, char **argv) {
 
     TFile *histogramFile = new TFile(histogramFileName, "RECREATE");
     TH1F *ww_mass_hist = new TH1F(WW_MASS_HISTOGRAM_NAME, "WW Invariant Mass", 100, 0, 2500);
-    int nClassifierFails = 0;
-    int nGoodEvents = 0;
 
     TH1F *TMVAResponseHist = new TH1F("TMVAResponse", "TMVA Response", 100, -2, 2);
     TH1F *leptonicWMass = new TH1F("LeptonicWMass", "Leptonic W Invariant Mass", 100, 0, 200);
+    int nGoodEvents = 0;
 
     for (int i = start; i < stop; i++) {
         if (i % 10 == 0) std::cerr << "Number of events: " << i << "\n";
@@ -93,7 +92,6 @@ int main(int argc, char **argv) {
         TMVAResponseHist->Fill(score);
         if (score < EVENT_MVA_CUTOFF) {
             std::cerr << "Event didn't pass classifier.\n";
-            nClassifierFails++;
             continue;
         }
 
@@ -111,5 +109,5 @@ int main(int argc, char **argv) {
     leptonicWMass->Write();
     
     histogramFile->Close();
-    std::cerr << "Out of " << nGoodEvents << " good events, " << nClassifierFails << " failed the classifier.\n";
+    std::cerr << "Number of good events: " << nGoodEvents << "\n";
 }
