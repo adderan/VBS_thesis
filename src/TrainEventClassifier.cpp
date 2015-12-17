@@ -49,8 +49,8 @@ int main(int argc, char **argv) {
     factory->AddVariable("WWScatteringEvent.LeptonPT");
 
     factory->PrepareTrainingAndTestTree("", "", "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V");
-    factory->BookMethod( TMVA::Types::kBDT, "BDT",
-						   "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
+    factory->BookMethod( TMVA::Types::kLD, "LD", "H:!V:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10");
+
     factory->TrainAllMethods();
     
     factory->TestAllMethods();

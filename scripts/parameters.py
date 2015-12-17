@@ -7,7 +7,7 @@ signalEventsDir = os.path.join(events, "Delphes_OUTPUT/VBFNLO_100K_Events")
 backgroundEventsDir = os.path.join(events, "Delphes_OUTPUT/MG5_v2_2_1_100K_Events")
 
 jetWeights = os.path.join(repo, "weights/JetClassification_BDT.weights.xml")
-eventWeights = os.path.join(repo, "weights/EventClassification_BDT.weights.xml")
+eventWeights = os.path.join(repo, "weights/EventClassification_LD.weights.xml")
 
 jetTrainFile = os.path.join(repo, "output/TrainingSets/JetClassifierTrainingSets.root")
 eventTrainFile = os.path.join(repo, "output/TrainingSets/EventClassifierTrainingSets.root")

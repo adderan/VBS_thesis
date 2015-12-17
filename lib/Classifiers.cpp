@@ -35,7 +35,7 @@ EventClassifier::EventClassifier(char *weightsFileName) {
     reader->AddVariable("WWScatteringEvent.LeptonAbsEta", &LeptonAbsEta);
     reader->AddVariable("WWScatteringEvent.LeptonPT", &LeptonPT);
 
-    reader->BookMVA("BDT", weightsFileName);
+    reader->BookMVA("LD", weightsFileName);
 }
 
 Double_t EventClassifier::ScoreEvent(struct WWScatteringComponents *event) {
@@ -48,6 +48,6 @@ Double_t EventClassifier::ScoreEvent(struct WWScatteringComponents *event) {
     LeptonAbsEta = abs(event->lepton->Eta());
     LeptonPT = event->lepton->Pt();
 
-    return reader->EvaluateMVA("BDT");
+    return reader->EvaluateMVA("LD");
 }
 
