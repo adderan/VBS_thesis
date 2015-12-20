@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         TMVAResponseHist->Fill(score);
         if (score < EVENT_MVA_CUTOFF) {
             std::cerr << "Event didn't pass classifier.\n";
-            continue;
+            //continue;
         }
 
         TLorentzVector *neutrino = ReconstructNeutrinoAlt(event->missingET, event->lepton);
