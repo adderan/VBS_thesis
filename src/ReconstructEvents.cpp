@@ -84,7 +84,6 @@ int main(int argc, char **argv) {
         if (!event->isGoodEvent) {
             continue;
         }
-        nGoodEvents++;
 
         //Decide whether this is a background event (W+jets or TTbar) or signal event (ww scattering) 
         //using the event classifier
@@ -95,11 +94,12 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        TLorentzVector *neutrino = ReconstructNeutrino(event->missingET, event->lepton);
+        TLorentzVector *neutrino = ReconstructNeutrinoAlt(event->missingET, event->lepton);
         if (!neutrino) continue;
         TLorentzVector *leptonicW = new TLorentzVector(*neutrino + *event->lepton);
         leptonicWMass->Fill(leptonicW->M());
         if (!(leptonicW->M() > 75 && leptonicW->M() < 85)) continue;
+        nGoodEvents++;
         TLorentzVector *WW = new TLorentzVector(*leptonicW + *event->hadronicJet);
 
         ww_mass_hist->Fill(WW->M());
@@ -109,5 +109,5 @@ int main(int argc, char **argv) {
     leptonicWMass->Write();
     
     histogramFile->Close();
-    std::cerr << "Number of good events: " << nGoodEvents << "\n";
+    std::cout << "Number of good events: " << nGoodEvents << "\n";
 }

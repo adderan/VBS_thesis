@@ -80,4 +80,5 @@ TLorentzVector *ReconstructNeutrino(TLorentzVector *MET, TLorentzVector *lepton)
 TLorentzVector *ParticleToVector(TRootLHEFParticle *particle);
 void MatchPartonWWScatteringEvent(TClonesArray *particles, TLorentzVector **lepton, TLorentzVector **neutrino,
         TLorentzVector **quark1, TLorentzVector **quark2, TLorentzVector **w1, TLorentzVector **w2);
+TLorentzVector *ReconstructNeutrinoAlt(TLorentzVector *tlvMET, TLorentzVector *tlvLep);
 #endif
