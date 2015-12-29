@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
             //continue;
         }
 
-        TLorentzVector *neutrino = ReconstructNeutrinoAlt(event->missingET, event->lepton);
+        TLorentzVector *neutrino = ReconstructNeutrino2(event->missingET, event->lepton);
         if (!neutrino) continue;
         TLorentzVector *leptonicW = new TLorentzVector(*neutrino + *event->lepton);
         leptonicWMass->Fill(leptonicW->M());

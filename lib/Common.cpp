@@ -255,7 +255,6 @@ void delta2_fcn(int& npar, double *gout, double& result, double par[], int flag)
             r*neut->P()*sin(neut->Phi()+alpha), 0.0, 0.0);
     neut_new->SetE(neut_new->P());
     delta2 = pow(neut_new->Px() - neut->Px(), 2) + pow(neut_new->Py() - neut->Py(), 2);
-    r *= sqrt(l_pt*l_pt + l_m*l_m) - l_pt*cos(dphi+alpha);
 
     result = delta2;
 }
@@ -285,7 +284,7 @@ double FitAlpha(TLorentzVector *tlvMET, TLorentzVector *tlvLep) {
     }
 }
 
-TLorentzVector *ReconstructNeutrinoAlt(TLorentzVector *tlvMET, TLorentzVector *tlvLep) {
+TLorentzVector *ReconstructNeutrino2(TLorentzVector *tlvMET, TLorentzVector *tlvLep) {
     TLorentzVector *tlvrej = new TLorentzVector();
     TLorentzVector *tlvNu = new TLorentzVector();
     //double mtw = sqrt(2*tlvLep->Pt()*tlvMET->Pt()*(1-cos(tlvLep->Phi() - tlvMET->Phi())));
@@ -330,7 +329,7 @@ TLorentzVector *ReconstructNeutrinoAlt(TLorentzVector *tlvMET, TLorentzVector *t
 		double B = -2*c1*b1;
 		//double C = 4*pow(tlvLep->E(),2)*pow(tlvMET->Pt(),2) - c1*c1;
 	    //double discr = B*B-4*A*C;
-		double pz = -B/(2*A);
+		double pz = -1*B/(2*A);
 		
 		tlvMET->SetPz(pz);
 		tlvMET->SetE(tlvMET->P());
@@ -338,3 +337,96 @@ TLorentzVector *ReconstructNeutrinoAlt(TLorentzVector *tlvMET, TLorentzVector *t
     }
     return tlvNu;
 }
+
+TLorentzVector *ReconstructNeutrino3(TLorentzVector *tlvMET, TLorentzVector *tlvLep) {
+    double pzl = tlvLep->Pz();
+    double Mw = W_MASS;
+    double Ml = tlvLep->M();
+    double pxl = tlvLep->Px();
+    double pyl = tlvLep->Py();
+    double pxn = tlvMET->Px();
+    double pyn = tlvMET->Py();
+    double El = tlvLep->E();
+    double EMiss = tlvMET->Pt();
+
+    double b = El;
+    double c = EMiss*EMiss;
+    double f = -pxl*pxn - pyl*pyn - (Mw*Mw - Ml*Ml)/2.0;
+    double g = pzl;
+
+    double discr = -pow(b,4)*c + b*b*c*g*g + b*b*f*f;
+    if (discr > 0) {
+        TLorentzVector *neutrino = new TLorentzVector();
+        double sol1 = (-f*g - sqrt(discr))/(b*b - g*g);
+        double sol2 = (sqrt(discr) - f*g)/(b*b - g*g);
+        double pzn = abs(sol2) > abs(sol1) ? sol1 : sol2;
+        std::cerr << "Pz = " << pzn << "\n";
+        neutrino->SetPxPyPzE(pxn, pyn, pzn, EMiss);
+        return neutrino;
+    }
+    else {
+        return NULL;
+    }
+}
+
+TLorentzVector *ReconstructNeutrinoMETCorrection(TLorentzVector *tlvMET, TLorentzVector *tlvLep) {
+    double pzl = tlvLep->Pz();
+    double Mw = W_MASS;
+    double Ml = tlvLep->M();
+    double pxl = tlvLep->Px();
+    double pyl = tlvLep->Py();
+    double pxn = tlvMET->Px();
+    double pyn = tlvMET->Py();
+    double El = tlvLep->E();
+    double phi = tlvMET->Phi();
+    double MET = tlvMET->Pt();
+
+    double a = pxl*cos(phi);
+    double b = pyl*sin(phi);
+    double c = (Mw*Mw - Ml*Ml)/2.0;
+    double d = -El*El + pzl*pzl;
+
+    double alpha = a + b;
+    double discr = 4*c*c*alpha*alpha - 4*c*c*(alpha*alpha + d);
+
+    if (discr < 0) return NULL;
+    double METPrime = (-2*c*alpha + sqrt(discr))/(2*(alpha*alpha + d));
+
+    TLorentzVector *tlvMETPrime = new TLorentzVector();
+    tlvMETPrime->SetPtEtaPhiE(METPrime, 0.0, phi, METPrime);
+
+    pxn = tlvMETPrime->Px();
+    pyn = tlvMETPrime->Py();
+
+    double pzn = -pzl*(pxl*pxn + pyl*pyn + c)/(El*El - pzl*pzl);
+    TLorentzVector *neutrino = new TLorentzVector();
+    neutrino->SetPxPyPzE(pxn, pyn, pzn, MET);
+    return neutrino;
+
+}
+
+TLorentzVector *ReconstructNeutrinoMETFit(TLorentzVector *tlvMET, TLorentzVector *tlvLep) {
+    TLorentzVector *tlvNu = new TLorentzVector();
+    //double mtw = sqrt(2*tlvLep->Pt()*tlvMET->Pt()*(1-cos(tlvLep->Phi() - tlvMET->Phi())));
+    double b1 = 2*tlvLep->Pz();
+    double A = 4*pow(tlvLep->E(),2) - pow(b1, 2);
+    double alpha = FitAlpha(tlvMET, tlvLep);
+    double dphi = tlvMET->Phi()-tlvLep->Phi();
+    double r = (W_MASS*W_MASS - tlvLep->M()*tlvLep->M())/(2*tlvMET->Pt()*(sqrt(tlvLep->Pt()*tlvLep->Pt()+tlvLep->M()*tlvLep->M())-tlvLep->Pt()*cos(dphi+alpha)));
+    double old_p = tlvMET->P();
+    double old_phi = tlvMET->Phi();
+    tlvMET->SetPx(r*old_p*cos(old_phi+alpha));
+    tlvMET->SetPy(r*old_p*sin(old_phi+alpha));
+    double c1 = W_MASS*W_MASS - pow(tlvLep->M(),2) + 
+        2*(tlvLep->Px()*tlvMET->Px()+tlvLep->Py()*tlvMET->Py());
+    double B = -2*c1*b1;
+    //double C = 4*pow(tlvLep->E(),2)*pow(tlvMET->Pt(),2) - c1*c1;
+    //double discr = B*B-4*A*C;
+    double pz = -1*B/(2*A);
+    
+    tlvMET->SetPz(pz);
+    tlvMET->SetE(tlvMET->P());
+    tlvNu->SetPtEtaPhiE(tlvMET->Pt(), tlvMET->Eta(), tlvMET->Phi(), tlvMET->E());
+    return tlvNu;
+}
+
