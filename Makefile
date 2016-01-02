@@ -4,7 +4,7 @@ tmpPath = ${PWD}/tmp
 
 libsources = $(wildcard $(libPath)/*.cpp)
 headers = $(wildcard $(libPath)/*.h)
-executables = ${binPath}/MakeJetTrainingSets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier ${binPath}/MakeEventTrainingSets ${binPath}/ReconstructEvents ${binPath}/WWReconstructTest ${binPath}/TrainEventClassifier ${binPath}/HypothesisTest ${binPath}/PzValidation
+executables = ${binPath}/MakeJetTrainingSets ${binPath}/TrainJetClassifier ${binPath}/TestJetClassifier ${binPath}/MakeEventTrainingSets ${binPath}/ReconstructEvents ${binPath}/WWReconstructTest ${binPath}/TrainEventClassifier ${binPath}/HypothesisTest ${binPath}/PzValidation ${binPath}/SmearingValidation
 
 
 CFLAGS=-g -O0 -Wall -Werror `root-config --cflags --glibs` -I ${libPath} -I delphes -I ExRootAnalysis/ExRootAnalysis -L delphes/ -L ExRootAnalysis -Wl,-rpath,${PWD}/delphes -Wl,-rpath,${PWD}/ExRootAnalysis
@@ -40,6 +40,9 @@ ${binPath}/HypothesisTest: src/HypothesisTest.cpp ${headers} ${libsources} ${dic
 
 ${binPath}/PzValidation: src/PzValidation.cpp ${headers} ${libsources} ${dict} ${external}
 	${CXX} ${CFLAGS} -o ${binPath}/PzValidation src/PzValidation.cpp ${libsources} ${dict} -lDelphes -lExRootAnalysis -lTMVA -lRooFit -lRooStats
+
+${binPath}/SmearingValidation: src/SmearingValidation.cpp ${headers} ${libsources} ${dict} ${external}
+	${CXX} ${CFLAGS} -o ${binPath}/SmearingValidation src/SmearingValidation.cpp ${libsources} ${dict} -lDelphes -lExRootAnalysis -lTMVA -lRooFit -lRooStats
 
 delphes/libDelphes.so:
 	cd delphes && make

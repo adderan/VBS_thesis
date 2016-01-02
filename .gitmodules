@@ -1,3 +1,6 @@
 [submodule "delphes"]
 	path = delphes
 	url = https://github.com/delphes/delphes
+[submodule "VBS"]
+	path = VBS
+	url = https://github.com/adderan/VBS

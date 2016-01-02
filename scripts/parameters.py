@@ -25,3 +25,22 @@ eventTrainStart = 1000
 eventTrainStop = 10000
 experimentStart = 10000
 experimentStop = 100000
+
+delphes = "./delphes/DelphesLHEF"
+
+mscard = "cards/delphes_card_ATLAS_ms.tcl"
+idcard = "cards/delphes_card_ATLAS_id.tcl"
+electroncard = "cards/delphes_card_ATLAS_electron.tcl"
+
+smearedIDFile = "output/DelphesValidation/SmearedIDMuons.root"
+smearedMSFile = "output/DelphesValidation/SmearedMSMuons.root"
+smearedElectronFile = "output/DelphesValidation/SmearedElectrons.root"
+
+smearedIDPlot = "output/DelphesValidation/IDPlot.root"
+smearedMSPlot = "output/DelphesValidation/MSPlot.root"
+smearedElectronPlot = "output/DelphesValidation/ElectronsPlot.root"
+
+
+muonFile = "/export/home/aldenderan/MadGraph5_v1_4_8_4/Z2mu_7/Events/run_01/events.lhe"
+electronFile = "/export/home/aldenderan/MadGraph5_v1_4_8_4/z_ee/Events/unweighted_events.lhe"
+
