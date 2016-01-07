@@ -21,59 +21,61 @@
 #include "RooExponential.h"
 #include "RooStats/ProfileLikelihoodTestStat.h"
 
-int main(int argc, char **argv) {
-    char *ttbarFileName = NULL;
-    char *wp3jetsFileName = NULL;
-    char *wp4jetsFileName = NULL;
-    char *smwwFileName = NULL;
-    char *opsFileName = NULL;
-    char *outputFileName = NULL;
-    int c;
-    while(1) {
-        int option_index = 0;
-        static struct option long_options[] = {
-            {"ttbar", required_argument, 0, 'a'},
-            {"wp3jets", required_argument, 0, 'b'},
-            {"wp4jets", required_argument, 0, 'c'},
-            {"smww", required_argument, 0, 'd'},
-            {"opsww", required_argument, 0, 'e'},
-            {"output", required_argument, 0, 'f'}
-        };
-        c = getopt_long(argc, argv, "abcdef:", long_options, &option_index);
-        if (c==-1)
-            break;
-        switch(c) {
-            case 'a':
-                ttbarFileName = optarg;
-                break;
-            case 'b':
-                wp3jetsFileName = optarg; 
-                break;
-            case 'c':
-                wp4jetsFileName = optarg;
-                break;
-            case 'd':
-                smwwFileName = optarg;
-                break;
-            case 'e':
-                opsFileName = optarg;
-                break;
-            case 'f':
-                outputFileName = optarg;
-                break;
-        }
-    }
+RooAddPdf *MakeModel(RooDataHist *data, RooRealVar *mww, char *name) {
+    char *modelName = (char*)calloc(50, sizeof(char));
+    strcat(modelName, name);
+    strcat(modelName, "model");
+    char *signalName = (char*)calloc(50, sizeof(char));
+    char *backgroundName = (char*)calloc(50, sizeof(char));
+    strcat(signalName, name);
+    strcat(signalName, "signal");
+    strcat(backgroundName, name);
+    strcat(backgroundName, "background");
 
+    char *meanName = (char*)calloc(50, sizeof(char));
+    strcat(meanName, name);
+    strcat(meanName, "mean");
+
+    char *sigmaName = (char*)calloc(50, sizeof(char));
+    strcat(sigmaName, name);
+    strcat(sigmaName, "sigma");
+
+    char *decayName = (char*)calloc(50, sizeof(char));
+    strcat(decayName, name);
+    strcat(decayName, "decay");
+
+    char *weightName = (char*)calloc(50, sizeof(char));
+    strcat(weightName, name);
+    strcat(weightName, "weight");
+
+    RooRealVar *mean = new RooRealVar(meanName, "mean", 0, 3000, "GeV");
+    RooRealVar *sigma = new RooRealVar(sigmaName, "sigma", 0, 3000, "GeV");
+    RooGaussian *signal = new RooGaussian(signalName, "signal", *mww, *mean, *sigma);
+
+    RooRealVar *decay = new RooRealVar(decayName, "decay", -10, 10, "GeV");
+    RooExponential *background = new RooExponential(backgroundName, "background", *mww, *decay);
+
+    RooRealVar *weight = new RooRealVar("decayweight", "weight", 0.0, 1.0, "None");
+
+    RooAddPdf *model = new RooAddPdf(modelName, "model", *signal, *background, *weight);
+
+    model->fitTo(*data);
+    mean->setConstant();
+    sigma->setConstant();
+    weight->setConstant();
+    decay->setConstant();
+    return model;
+}
+
+double RunHypoTest(char *smwwFileName, char *ttbarFileName, char *wp3jetsFileName, char *wp4jetsFileName, char *opsFileName, char *outputFileName) {
     TFile *smwwFile = new TFile(smwwFileName);
     TFile *ttbarFile = new TFile(ttbarFileName);
     TFile *wp3jetsFile = new TFile(wp3jetsFileName);
     TFile *wp4jetsFile = new TFile(wp4jetsFileName);
     TFile *opsFile = new TFile(opsFileName);
 
-    TFile *outputFile = new TFile(outputFileName, "RECREATE");
-    std::cerr << "Using signal file: " << opsFileName << "\n";
+    TFile *outputFile = new TFile(outputFileName, "UPDATE");
 
-    //Histogram of standard model WW scattering invariant mass
     TH1F *smww = (TH1F*)smwwFile->Get(WW_MASS_HISTOGRAM_NAME);
     TH1F *ttbar = (TH1F*)ttbarFile->Get(WW_MASS_HISTOGRAM_NAME);
     TH1F *wp3jets = (TH1F*)wp3jetsFile->Get(WW_MASS_HISTOGRAM_NAME);
@@ -91,57 +93,27 @@ int main(int argc, char **argv) {
     RooDataHist wp4jetsData("wp4jetsData", "wp4jetsData", RooArgList(*mww), wp4jets);
 
 
-    RooRealVar *meanSM = new RooRealVar("meanSM", "meanSM", 0, 3000, "GeV");
-    RooRealVar *sigmaSM = new RooRealVar("sigmaSM", "sigmaSM", 0, 3000.0, "GeV");
-    RooGaussian *smModel = new RooGaussian("smModel", "smModel", *mww, *meanSM, *sigmaSM);
+    RooAddPdf *smModel = MakeModel(&smData, mww, (char*)"sm");
 
-    RooRealVar *meanOps = new RooRealVar("meanOps", "meanOps", 0, 3000, "GeV");
-    RooRealVar *sigmaOps = new RooRealVar("sigmaOps", "sigmaOps", 0, 3000, "GeV");
-    RooGaussian *opsModel = new RooGaussian("opsModel", "opsModel", *mww, *meanOps, *sigmaOps);
-
-    RooRealVar *meanTTBar = new RooRealVar("meanTTBar", "meanTTBar", 0, 3000, "GeV");
-    RooRealVar *sigmaTTBar = new RooRealVar("sigmaTTBar", "sigmaTTBar", 0, 3000, "GeV");
-    RooGaussian *ttbarModel = new RooGaussian("ttbarModel", "ttbarModel", *mww,
-            *meanTTBar, *sigmaTTBar);
-
-    RooRealVar *meanWP3Jets = new RooRealVar("meanWP3Jets", "meanWP3Jets", 0, 3000, "GeV");
-    RooRealVar *sigmaWP3Jets = new RooRealVar("sigmaWP3Jets", "sigmaWP3Jets", 0, 3000, "GeV");
-    RooGaussian *wp3jetsModel = new RooGaussian("wp3jetsModel", "wp3jetsModel", 
-            *mww, *meanWP3Jets, *sigmaWP3Jets);
-
-    RooRealVar *meanWP4Jets = new RooRealVar("meanWP4Jets", "meanWP4Jets", 0, 3000, "GeV");
-    RooRealVar *sigmaWP4Jets = new RooRealVar("sigmaWP4Jets", "sigmaWP4Jets", 0, 3000, "GeV");
-    RooGaussian *wp4jetsModel = new RooGaussian("wp4jetsModel", "wp4jetsModel", 
-            *mww, *meanWP4Jets, *sigmaWP4Jets);
-
-    smModel->fitTo(smData);
-    opsModel->fitTo(opsData);
-    ttbarModel->fitTo(ttbarData);
-    wp3jetsModel->fitTo(wp3jetsData);
-    wp4jetsModel->fitTo(wp4jetsData);
-
-    sigmaSM->setConstant();
-    meanSM->setConstant();
-    meanOps->setConstant();
-    sigmaOps->setConstant();
-    meanTTBar->setConstant();
-    sigmaTTBar->setConstant();
-    meanWP3Jets->setConstant();
-    sigmaWP3Jets->setConstant();
-    meanWP4Jets->setConstant();
-    sigmaWP4Jets->setConstant();
+    RooAddPdf *opsModel = MakeModel(&opsData, mww, (char*)"ops");
+    RooAddPdf *ttbarModel = MakeModel(&ttbarData, mww, (char*)"ttbar");
+    RooAddPdf *wp3jetsModel = MakeModel(&wp3jetsData, mww, (char*)"wp3jets");
+    RooAddPdf *wp4jetsModel = MakeModel(&wp4jetsData, mww, (char*)"wp4jets");
 
     TCanvas *canvas = new TCanvas("Fits");
     RooPlot *frame = mww->frame();
     //smData.plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("smData"));
 
-    smModel->plotOn(frame, RooFit::LineColor(kBlue), RooFit::Name("smModel"));
-    ttbarModel->plotOn(frame, RooFit::LineColor(kRed), RooFit::Name("ttbarModel"));
-    wp3jetsModel->plotOn(frame, RooFit::LineColor(kYellow), RooFit::Name("wpjetsModel"));
+    //smModel->plotOn(frame, RooFit::LineColor(kBlue), RooFit::Name("smModel"));
+    //ttbarModel->plotOn(frame, RooFit::LineColor(kRed), RooFit::Name("ttbarModel"));
+    //wp3jetsModel->plotOn(frame, RooFit::LineColor(kYellow), RooFit::Name("wpjetsModel"));
+    opsData.plotOn(frame);
+    opsModel->plotOn(frame, RooFit::LineColor(kBlue), RooFit::Name("opsModel"));
     TLegend *leg = new TLegend(0.65,0.73,0.86,0.87);
-    leg->AddEntry(frame->findObject("smModel"), "SM Model", "lep");
-    leg->AddEntry(frame->findObject("ttbarModel"), "TTBar Model", "lep");
-    leg->AddEntry(frame->findObject("wp3jetsModel"), "WP3Jets Model", "lep");
+    //leg->AddEntry(frame->findObject("smModel"), "SM Model", "lep");
+    //leg->AddEntry(frame->findObject("ttbarModel"), "TTBar Model", "lep");
+    //leg->AddEntry(frame->findObject("wp3jetsModel"), "WP3Jets Model", "lep");
+    leg->AddEntry(frame->findObject("opsModel"), "Effective Operator Model", "lep");
 
     frame->Draw();
     leg->Draw();
@@ -175,7 +147,7 @@ int main(int argc, char **argv) {
 
     //Generate data under the alternate hypothesis
     mu->setVal(1.0);
-    RooAbsData *generatedData = model->generate(*mww, N_HYPOTHESIS_TEST_EVENTS);
+    RooAbsData *generatedData = model->generate(*mww, 100);
 
     TCanvas *canvas2 = new TCanvas("CombinedModels");
     RooPlot *frame2 = mww->frame();
@@ -207,8 +179,68 @@ int main(int argc, char **argv) {
 
 
     RooStats::HypoTestResult* htr = plc.GetHypoTest();
-    std::cout << "-------------------------------------------------" << "\n";
-    std::cout << "The p-value for the null is " << htr->NullPValue() << "\n";
-    std::cout << "Corresponding to a signifcance of " << htr->Significance() << "\n";
-    std::cout << "-------------------------------------------------\n\n" << "\n";
+    return htr->Significance();
+}
+
+int main(int argc, char **argv) {
+    char *ttbarFileName = NULL;
+    char *wp3jetsFileName = NULL;
+    char *wp4jetsFileName = NULL;
+    char *smwwFileName = NULL;
+    char *opsFileName[10];
+    int nOpsFile = 0;
+    char *outputFileName = NULL;
+    int c;
+    while(1) {
+        int option_index = 0;
+        static struct option long_options[] = {
+            {"ttbar", required_argument, 0, 'a'},
+            {"wp3jets", required_argument, 0, 'b'},
+            {"wp4jets", required_argument, 0, 'c'},
+            {"smww", required_argument, 0, 'd'},
+            {"opsww", required_argument, 0, 'e'},
+            {"output", required_argument, 0, 'f'}
+        };
+        c = getopt_long(argc, argv, "abcdef:", long_options, &option_index);
+        if (c==-1)
+            break;
+        switch(c) {
+            case 'a':
+                ttbarFileName = optarg;
+                break;
+            case 'b':
+                wp3jetsFileName = optarg; 
+                break;
+            case 'c':
+                wp4jetsFileName = optarg;
+                break;
+            case 'd':
+                smwwFileName = optarg;
+                break;
+            case 'e':
+                opsFileName[nOpsFile] = optarg;
+                nOpsFile++;
+                break;
+            case 'f':
+                outputFileName = optarg;
+                break;
+        }
+    }
+    double lambda[5] = {4.6*pow(10, -6), 4*pow(10, -6), 5.33*pow(10, -6), 6.25*pow(10, -6), 8.16*pow(10, -6)};
+
+    TFile *outputFile = new TFile(outputFileName, "RECREATE");
+    outputFile->Close();
+    double significance[10];
+    for (int i = 0; i < nOpsFile; i++) {
+        std::cerr << "using signal file " << opsFileName[i] << "\n";
+        significance[i] = RunHypoTest(smwwFileName, ttbarFileName, wp3jetsFileName, wp4jetsFileName, opsFileName[i], outputFileName);
+        std::cerr << "Significance = " << significance[i] << "\n";
+    }
+    TGraph *graph = new TGraph(nOpsFile, lambda, significance);
+    graph->SetLineColor(kRed);
+    TFile *outputFile2 = new TFile(outputFileName, "UPDATE");
+    TCanvas *canvas = new TCanvas();
+    graph->Draw("A*");
+    canvas->Write();
+    outputFile2->Close();
 }

@@ -18,6 +18,8 @@ signalNames = ['14TeV_201_100K_Events_1500mjj', '14TeV_201_100K_Events_4.6e-6CWW
 
 backgroundNames = {'ttbar':'14TeV_TTBar_100K_Events_1500mjj.root', 'wp3jets':'14TeV_Wp3Jets_100K_Events_1500mjj.root', 'wp4jets':'14TeV_Wp4Jets_100K_Events_1500mjj.root'}
 
+badSignalNames = ['14TeV_201_100K_Events_8.16e-6CWWW_1500mjj']
+
 #Event range allocations
 jetTrainStart = 0
 jetTrainStop = 1000
