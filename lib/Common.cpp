@@ -52,7 +52,7 @@ WWScatteringComponents::WWScatteringComponents(JetClassifier *jetClassifier,
     if(!(found_tag_jets && found_lepton && hadronicJet)) isGoodEvent = false;
 }
 
-//Finds the two tagging high-eta tagging jets on opposite eta hemispheres, 
+//Finds the two high-eta tagging jets on opposite eta hemispheres, 
 //using the provided tagging jet classifier
 bool FindTagJetPair(JetClassifier *classifier, TClonesArray *jets, 
         TLorentzVector *positiveJet, TLorentzVector *negativeJet) {

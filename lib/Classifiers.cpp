@@ -19,7 +19,12 @@ bool JetClassifier::isTaggingJet(Jet *jet) {
     AbsEta = abs(jet->Eta);
     Mass = jet->Mass;
     Energy = GetJetEnergy(jet);
-    BetaStar = jet->BetaStar;
+    if (AbsEta > JVF_CUTOFF) {
+        BetaStar = 1.0;
+    }
+    else {
+        BetaStar = jet->BetaStar;
+    }
 
     Double_t mva_value = reader->EvaluateMVA("BDT");
     return (mva_value > JET_MVA_CUTOFF);

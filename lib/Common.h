@@ -49,6 +49,8 @@
 
 #define N_HYPOTHESIS_TEST_EVENTS 1000
 
+#define JVF_CUTOFF 0.5
+
 
 /******Names of things************/
 #define WW_MASS_HISTOGRAM_NAME "WWMass"

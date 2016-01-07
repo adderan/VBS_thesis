@@ -23,7 +23,13 @@
 using namespace std;
 
 void CopyFromJet(TrainJet *trainJet, Jet *jet) {
-    trainJet->BetaStar = jet->BetaStar;
+    //simulate tracker cutoff
+    if (abs(jet->Eta) > JVF_CUTOFF) {
+        trainJet->BetaStar = 1.0;
+    }
+    else {
+        trainJet->BetaStar = jet->BetaStar;
+    }
     trainJet->AbsEta = abs(jet->Eta);
     trainJet->Energy = GetJetEnergy(jet);
     trainJet->Mass = jet->Mass;
