@@ -33,7 +33,7 @@
 
 /******Parameters ********/
 
-#define JET_MVA_CUTOFF 0.0
+#define JET_MVA_CUTOFF -1.44
 #define EVENT_MVA_CUTOFF 0.098
 
 //Maximum Eta of lepton in WW scattering event
@@ -64,6 +64,7 @@ struct WWScatteringComponents {
     TLorentzVector *positiveJet;
     TLorentzVector *negativeJet;
     bool isGoodEvent;
+    bool hasTagJets;
     WWScatteringComponents (JetClassifier *jetClassifier, TClonesArray *electronBranch, 
             TClonesArray *muonBranch, 
             TClonesArray *jetBranch, TClonesArray *ETBranch);

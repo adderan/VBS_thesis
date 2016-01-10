@@ -43,13 +43,13 @@ WWScatteringComponents::WWScatteringComponents(JetClassifier *jetClassifier,
 
     positiveJet = new TLorentzVector();
     negativeJet = new TLorentzVector();
-    bool found_tag_jets = FindTagJetPair(jetClassifier, jetBranch, positiveJet, negativeJet);
+    hasTagJets = FindTagJetPair(jetClassifier, jetBranch, positiveJet, negativeJet);
 
     lepton = new TLorentzVector();
     bool found_lepton = FindLepton(electronBranch, muonBranch, lepton);
 
     hadronicJet = FindHadronicJet(jetBranch);
-    if(!(found_tag_jets && found_lepton && hadronicJet)) isGoodEvent = false;
+    if(!(hasTagJets && found_lepton && hadronicJet)) isGoodEvent = false;
 }
 
 //Finds the two high-eta tagging jets on opposite eta hemispheres, 
@@ -316,7 +316,7 @@ TLorentzVector *ReconstructNeutrino2(TLorentzVector *tlvMET, TLorentzVector *tlv
         tlvNu->SetPtEtaPhiE(tlvMET->Pt(), tlvMET->Eta(), tlvMET->Phi(), tlvMET->E());
     }
     else {
-        std::cerr << "Attempting to deal with negative discriminant.\n";
+        //std::cerr << "Attempting to deal with negative discriminant.\n";
         double alpha = FitAlpha(tlvMET, tlvLep);
         double dphi = tlvMET->Phi()-tlvLep->Phi();
 		double r = (W_MASS*W_MASS - tlvLep->M()*tlvLep->M())/(2*tlvMET->Pt()*(sqrt(tlvLep->Pt()*tlvLep->Pt()+tlvLep->M()*tlvLep->M())-tlvLep->Pt()*cos(dphi+alpha)));

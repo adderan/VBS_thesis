@@ -72,16 +72,23 @@ int main(int argc, char **argv) {
 
     TH1F *TMVAResponseHist = new TH1F("TMVAResponse", "TMVA Response", 100, -2, 2);
     TH1F *leptonicWMass = new TH1F("LeptonicWMass", "Leptonic W Invariant Mass", 100, 0, 200);
+
+    int nNoTagJets = 0;
+    int nBadEvent = 0;
+    int nClassifierFails = 0;
+    int nNoReconstruction = 0;
     int nGoodEvents = 0;
 
     for (int i = start; i < stop; i++) {
-        if (i % 10 == 0) std::cerr << "Number of events: " << i << "\n";
+        //if (i % 10 == 0) std::cerr << "Number of events: " << i << "\n";
         reader->ReadEntry(i);
         struct WWScatteringComponents *event = new WWScatteringComponents(jetClassifier, 
                 electronBranch, muonBranch, jetBranch, ETBranch);
         
         //Can't proceed unless all final-state particles were found
         if (!event->isGoodEvent) {
+            if (!event->hasTagJets) nNoTagJets++;
+            else nBadEvent++;
             continue;
         }
 
@@ -90,15 +97,22 @@ int main(int argc, char **argv) {
         Double_t score = eventClassifier->ScoreEvent(event);
         TMVAResponseHist->Fill(score);
         if (score < EVENT_MVA_CUTOFF) {
-            std::cerr << "Event didn't pass classifier.\n";
+            nClassifierFails++;
+            //std::cerr << "Event didn't pass classifier.\n";
             continue;
         }
 
         TLorentzVector *neutrino = ReconstructNeutrino2(event->missingET, event->lepton);
-        if (!neutrino) continue;
+        if (!neutrino) {
+            nNoReconstruction++;
+            continue;
+        }
         TLorentzVector *leptonicW = new TLorentzVector(*neutrino + *event->lepton);
         leptonicWMass->Fill(leptonicW->M());
-        if (!(leptonicW->M() > 75 && leptonicW->M() < 85)) continue;
+        if (!(leptonicW->M() > 75 && leptonicW->M() < 85)) {
+            nNoReconstruction++;
+            continue;
+        }
         nGoodEvents++;
         TLorentzVector *WW = new TLorentzVector(*leptonicW + *event->hadronicJet);
 
@@ -109,5 +123,9 @@ int main(int argc, char **argv) {
     leptonicWMass->Write();
     
     histogramFile->Close();
-    std::cout << "Number of good events: " << nGoodEvents << "\n";
+    std::cerr << "Number of good events: " << nGoodEvents << "\n";
+    std::cerr << "No Tag Jets: " << nNoTagJets << "\n";
+    std::cerr << "Bad events: " << nBadEvent << "\n";
+    std::cerr << "Classifier fails: " << nClassifierFails << "\n";
+    std::cerr << "No reconstruction: " << nNoReconstruction << "\n";
 }
