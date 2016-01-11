@@ -49,7 +49,7 @@
 
 #define N_HYPOTHESIS_TEST_EVENTS 1000
 
-#define JVF_CUTOFF 5.0
+#define JVF_CUTOFF 4.0
 
 
 /******Names of things************/
