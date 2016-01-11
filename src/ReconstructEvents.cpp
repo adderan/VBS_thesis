@@ -79,6 +79,8 @@ int main(int argc, char **argv) {
     int nNoReconstruction = 0;
     int nGoodEvents = 0;
 
+    std::cerr << "File: " << eventsFileNames[0] << "\n";
+
     for (int i = start; i < stop; i++) {
         //if (i % 10 == 0) std::cerr << "Number of events: " << i << "\n";
         reader->ReadEntry(i);
@@ -123,9 +125,9 @@ int main(int argc, char **argv) {
     leptonicWMass->Write();
     
     histogramFile->Close();
-    std::cerr << "Number of good events: " << nGoodEvents << "\n";
-    std::cerr << "No Tag Jets: " << nNoTagJets << "\n";
-    std::cerr << "Bad events: " << nBadEvent << "\n";
-    std::cerr << "Classifier fails: " << nClassifierFails << "\n";
-    std::cerr << "No reconstruction: " << nNoReconstruction << "\n";
+    std::cout << "Number of good events: " << nGoodEvents << "\n";
+    std::cout << "No Tag Jets: " << nNoTagJets << "\n";
+    std::cout << "Bad events: " << nBadEvent << "\n";
+    std::cout << "Classifier fails: " << nClassifierFails << "\n";
+    std::cout << "No reconstruction: " << nNoReconstruction << "\n";
 }

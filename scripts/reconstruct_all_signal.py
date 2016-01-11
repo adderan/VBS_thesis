@@ -2,7 +2,7 @@
 import os
 import parameters
 
-for signalName in parameters.badSignalNames:
+for signalName in parameters.signalNames:
     folder = os.path.join(parameters.signalEventsDir, signalName)
     histogram = os.path.join(parameters.repo, "output/Spectra", signalName)
     histogram += ".root"
