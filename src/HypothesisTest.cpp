@@ -84,7 +84,7 @@ double RunHypoTest(char *smwwFileName, char *ttbarFileName, char *wp3jetsFileNam
     //Histogram of ww-scattering with effective operator contributions
     TH1F *ops = (TH1F*)opsFile->Get(WW_MASS_HISTOGRAM_NAME);
 
-    RooRealVar *mww = new RooRealVar("mww", "M_ww", 600, 2500, "GeV");
+    RooRealVar *mww = new RooRealVar("mww", "M_{WW}", 600, 2500, "GeV");
 
     RooDataHist smData("smData", "smData", RooArgList(*mww), smww);
     RooDataHist opsData("opsData", "opsData", RooArgList(*mww), ops);
@@ -100,8 +100,9 @@ double RunHypoTest(char *smwwFileName, char *ttbarFileName, char *wp3jetsFileNam
     RooAddPdf *wp3jetsModel = MakeModel(&wp3jetsData, mww, (char*)"wp3jets");
     RooAddPdf *wp4jetsModel = MakeModel(&wp4jetsData, mww, (char*)"wp4jets");
 
-    TCanvas *canvas = new TCanvas("Fits");
+    TCanvas *canvas = new TCanvas(opsFileName);
     RooPlot *frame = mww->frame();
+    frame->SetTitle("");
     //smData.plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("smData"));
 
     //smModel->plotOn(frame, RooFit::LineColor(kBlue), RooFit::Name("smModel"));
@@ -113,7 +114,7 @@ double RunHypoTest(char *smwwFileName, char *ttbarFileName, char *wp3jetsFileNam
     //leg->AddEntry(frame->findObject("smModel"), "SM Model", "lep");
     //leg->AddEntry(frame->findObject("ttbarModel"), "TTBar Model", "lep");
     //leg->AddEntry(frame->findObject("wp3jetsModel"), "WP3Jets Model", "lep");
-    leg->AddEntry(frame->findObject("opsModel"), "Effective Operator Model", "lep");
+    //leg->AddEntry(frame->findObject("opsModel"), "Effective Operator Model", "lep");
 
     frame->Draw();
     leg->Draw();
@@ -226,7 +227,11 @@ int main(int argc, char **argv) {
                 break;
         }
     }
-    double lambda[5] = {4.6*pow(10, -6), 4*pow(10, -6), 5.33*pow(10, -6), 6.25*pow(10, -6), 8.16*pow(10, -6)};
+    double cww[4] = {4.6*pow(10, -6), 4*pow(10, -6), 5.33*pow(10, -6), 6.25*pow(10, -6)};
+    double lambda[4];
+    for (int i = 0; i < 4; i++) {
+        lambda[i] = 1.0/sqrt(cww[i]);
+    }
 
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
     outputFile->Close();
@@ -237,7 +242,12 @@ int main(int argc, char **argv) {
         std::cerr << "Significance = " << significance[i] << "\n";
     }
     TGraph *graph = new TGraph(nOpsFile, lambda, significance);
-    graph->SetLineColor(kRed);
+    graph->SetFillColor(kRed);
+    graph->SetTitle("");
+    graph->GetYaxis()->SetTitle("Significance (#sigma)");
+    graph->GetYaxis()->CenterTitle();
+    graph->GetXaxis()->SetTitle("#Lambda (GeV)");
+    graph->GetXaxis()->CenterTitle();
     TFile *outputFile2 = new TFile(outputFileName, "UPDATE");
     TCanvas *canvas = new TCanvas();
     graph->Draw("A*");
