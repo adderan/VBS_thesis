@@ -12,8 +12,9 @@ eventWeights = os.path.join(repo, "weights/EventClassification_LD.weights.xml")
 jetTrainFile = os.path.join(repo, "output/TrainingSets/JetClassifierTrainingSets.root")
 eventTrainFile = os.path.join(repo, "output/TrainingSets/EventClassifierTrainingSets.root")
 
-signalNames = ['14TeV_201_100K_Events_1500mjj', '14TeV_201_100K_Events_4.6e-6CWWW_1500mjj',
-        '14TeV_201_100K_Events_4e-6CWWW_1500mjj', '14TeV_201_100K_Events_5.33e-6CWWW_1500mjj',
+signalNames = ['14TeV_201_100K_Events_1500mjj', '14TeV_201_100K_Events_4e-6CWWW_1500mjj', 
+        '14TeV_201_100K_Events_4.6e-6CWWW_1500mjj',
+        '14TeV_201_100K_Events_5.33e-6CWWW_1500mjj',
         '14TeV_201_100K_Events_6.25e-6CWWW_1500mjj']
 
 backgroundNames = {'ttbar':'14TeV_TTBar_100K_Events_1500mjj.root', 'wp3jets':'14TeV_Wp3Jets_100K_Events_1500mjj.root', 'wp4jets':'14TeV_Wp4Jets_100K_Events_1500mjj.root'}

@@ -33,8 +33,8 @@
 
 /******Parameters ********/
 
-#define JET_MVA_CUTOFF -0.142
-#define EVENT_MVA_CUTOFF 0.091
+#define JET_MVA_CUTOFF -0.139
+#define EVENT_MVA_CUTOFF 0.109
 
 //Maximum Eta of lepton in WW scattering event
 #define LEPTON_ETA_CUTOFF 2.4
@@ -47,9 +47,9 @@
 //maximum value of sqrt(eta^2 + phi^2) between two tracks that correspond to the same particle
 #define MAX_DELTA_R 0.6
 
-#define N_HYPOTHESIS_TEST_EVENTS 1000
+#define TOTAL_INTEGRATED_LUMINOSITY 10 //fb^{-1}
 
-#define JVF_CUTOFF 4.0
+#define JVF_CUTOFF 5.0
 
 
 /******Names of things************/
